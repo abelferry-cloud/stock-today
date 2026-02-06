@@ -1,0 +1,64 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+logs/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Spring Boot
+spring-boot-starter-parent/
+
+# Application specific
+application-local.yml
+application-dev.yml
+application-prod.yml
+
+# Claude Code
+.claude/
+
+# Project documentation (internal)
+project_introduce.md
+
+# Private files and sensitive data
+*.env
+.env
+*.key
+*.pem
+credentials.json
+secret.properties
+secrets.yml
