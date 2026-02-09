@@ -1,0 +1,22 @@
+spring:
+  rabbitmq:
+    host: 172.23.70.33 # rabbitMQ的ip地址
+    port: 5672 # 端口
+    username: jovan
+    password: 123456
+    virtual-host: /stock-today
+    # RabbitMQ 队列配置（可选，使用 RabbitMQProperties 类的默认值）
+    stock:
+      # 队列名配置
+      vector-queue: stock.vector.queue         # RAG向量数据队列
+      raw-data-queue: stock.raw.data.queue     # 原始数据队列（备用）
+      inner-market-queue: innerMarketQueue     # 国内大盘队列
+      outer-market-queue: stock.outer.market.queue # 国外大盘队列
+      # 交换机配置
+      data-exchange: stock.data.exchange       # 股票数据主交换机
+      stock-exchange: stockExchange            # 股票大盘交换机
+      # 路由键配置
+      vector-routing-key: stock.data.vector    # 向量数据路由键
+      raw-data-routing-key: stock.data.raw     # 原始数据路由键
+      inner-market-routing-key: inner.market   # 国内大盘路由键
+      outer-market-routing-key: stock.outer.market # 国外大盘路由键

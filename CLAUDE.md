@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 AI and Distributed Architecture-Based Intelligent Stock Data Analysis Platform. A comprehensive stock data analysis system covering data collection (crawling), cleaning, storage, RAG knowledge base construction, and AI-driven natural language querying.
 
-**Tech Stack:** Java 17, Spring Boot 3.2.5, Spring AI 1.0.0-M4, MyBatis, MySQL, Redis, RabbitMQ, DeepSeek AI
+**Tech Stack:** Java 17, Spring Boot 3.2.5, Spring AI 1.0.0, MyBatis, MySQL, Redis, RabbitMQ, DeepSeek AI
 
 ## Build and Run Commands
 
@@ -142,3 +142,8 @@ RAG configuration in `application.yml`:
 2. **New async task:** Create RabbitMQ listener in `rabbitmq/` with `@RabbitListener`
 3. **New database entity:** Create entity class, MyBatis mapper interface, and XML mapper
 4. **New scheduled task:** Create method with `@Scheduled` in a service class
+
+
+## language
+Notes: all your output should be in Chinese.
+

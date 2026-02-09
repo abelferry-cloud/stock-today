@@ -1,0 +1,18 @@
+# log config
+logging:
+  config:
+    classpath: logback.xml
+
+xxl:
+  job:
+    accessToken: 'default_token'
+    admin:
+      addresses: http://172.23.70.33:8088/xxl-job-admin
+    executor:
+      address: ''
+      appname: stock-today
+      ip: ''
+      logpath: ./logs
+      logretentiondays: 30
+      # 配置心跳端口
+      port: 7777

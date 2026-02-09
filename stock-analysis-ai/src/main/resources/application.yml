@@ -1,0 +1,123 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: stock-analysis-platform
+
+  # Database: MySQL Configuration
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://172.23.70.33:3306/stock_analysis?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: 123456
+    password: 123456
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+
+  # Cache: Redis Configuration
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-wait: -1ms
+          max-idle: 10
+          min-idle: 5
+
+  # Message Queue: RabbitMQ Configuration
+  rabbitmq:
+    host: 172.23.70.33
+    port: 5672
+    username: jovan
+    password: 123456
+    virtual-host: /stock-today
+    listener:
+      simple:
+        acknowledge-mode: manual
+        concurrency: 5
+        max-concurrency: 10
+        prefetch: 1
+    publisher-confirm-type: correlated
+    publisher-returns: true
+
+  # Spring AI Configuration
+  ai:
+    deepseek:
+      # API Key（供 Spring AI 自动配置使用）
+      api-key: ${DEEPSEEK_API_KEY}
+      base-url: https://api.deepseek.com
+      chat:
+        options:
+          model: deepseek-reasoner
+          temperature: 0.7
+    openai: # 阿里云百炼平台兼容OpenAI，所以这里使用阿里云百炼平台地址
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${DASHSCOPE_API_KEY}
+      embedding:
+        options:
+          model: text-embedding-v4
+
+    vectorstore:
+      pinecone:
+        api-key: ${PINECONE_API_KEY}
+        index-name: stock-analysis
+
+# 自定义配置：RAG向量检索参数
+app:
+  rag:
+    # 文档分块大小（字符数）
+    chunk-size: 1000
+    # 文档分块重叠大小
+    chunk-overlap: 200
+    # 向量检索返回的Top-K结果数量
+    top-k: 5
+    # 相似度阈值（0-1），低于此值的结果将被过滤
+    similarity-threshold: 0.7
+  api-key:
+    keys:
+          - ${DEEPSEEK_API_KEY01}
+          - ${DEEPSEEK_API_KEY02}
+          - ${DEEPSEEK_API_KEY03}
+          - ${DEEPSEEK_API_KEY04}
+
+
+
+# 自定义配置：API Key 轮询列表（用于监控）
+
+# MyBatis Configuration
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.stock.platform.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+
+# Logging Configuration
+logging:
+  level:
+    com.stock.platform: DEBUG
+    org.springframework.ai: DEBUG
+    org.mybatis: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/stock-platform.log
+    max-size: 100MB
+    max-history: 30

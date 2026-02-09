@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.me.stock.mapper.StockMarketIndexInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.me.stock.pojo.entity.StockMarketIndexInfo">
+            <id property="id" column="id" />
+            <result property="marketCode" column="market_code" />
+            <result property="marketName" column="market_name" />
+            <result property="preClosePoint" column="pre_close_point" />
+            <result property="openPoint" column="open_point" />
+            <result property="curPoint" column="cur_point" />
+            <result property="minPoint" column="min_point" />
+            <result property="maxPoint" column="max_point" />
+            <result property="tradeAmount" column="trade_amount" />
+            <result property="tradeVolume" column="trade_volume" />
+            <result property="curTime" column="cur_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,market_code,market_name,pre_close_point,open_point,cur_point,
+        min_point,max_point,trade_amount,trade_volume,cur_time
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from stock_market_index_info
+        where  id = #{id} 
+    </select>
+    <select id="getMarketInfo" resultType="com.me.stock.pojo.domain.InnerMarketDomain">
+        SELECT
+            smi.market_code AS code,
+            smi.market_name AS name,
+            smi.open_point AS openPoint,
+            smi.cur_point AS curPoint,
+            smi.pre_close_point AS preClosePoint,
+            smi.trade_amount AS tradeAmt,
+            smi.trade_volume AS tradeVol,
+            smi.cur_point-smi.pre_close_point AS upDown,
+            (smi.cur_point-smi.pre_close_point)/smi.pre_close_point AS rose,
+            (smi.max_point-smi.min_point)/smi.pre_close_point AS amplitude,
+            smi.cur_time AS curTime
+        FROM
+            stock_market_index_info AS smi
+        WHERE smi.cur_time = #{curDate}
+          AND smi.market_code IN
+        <foreach collection="marketCodes" item="mcode" open="(" separator="," close=")">
+            #{mcode}
+        </foreach>
+    </select>
+    <select id="getSumAmtInfo" resultType="java.util.Map">
+        select
+        date_format(smi.cur_time,'%Y%m%d%H%i') as time,
+        sum(smi.trade_amount) as count
+        from stock_market_index_info as smi
+        where smi.market_code in
+        <foreach collection="markedIds" item="marketId" open="(" separator="," close=")">
+            #{marketId}
+        </foreach>
+        and smi.cur_time between #{openDate} and #{endDate}
+        group by smi.cur_time
+        order by time ASC
+    </select>
+    <select id="stockUpDownScopeCount" resultType="java.util.Map">
+    <![CDATA[
+        select
+            tmp2.title,
+            count(*) as count
+        from
+            (select
+                 CASE
+                     WHEN tmp.rate > 0.07 THEN  '>7%'
+                     WHEN tmp.rate > 0.05 AND tmp.rate <= 0.07 THEN '5~7%'
+                     WHEN tmp.rate > 0.03 AND tmp.rate <= 0.05 THEN '3~5%'
+                     WHEN tmp.rate > 0 AND tmp.rate <= 0.03 THEN '0~3%'
+                     WHEN tmp.rate > -0.03 AND tmp.rate <= 0 THEN '-3~0%'
+                     WHEN tmp.rate > -0.05 AND tmp.rate <= -0.03 THEN '-5~-3%'
+                     WHEN tmp.rate > -0.07 AND tmp.rate <= -0.05 THEN '-7~-5%'
+                     ELSE '<-7%'
+                     END 'title'
+             from
+                 (select
+                      (sri.cur_price-sri.pre_close_price)/sri.pre_close_price as rate
+                  from stock_rt_info as sri
+                  where sri.cur_time=#{curDate})
+                     as tmp)
+                as tmp2 group by tmp2.title
+        ]]>
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from stock_market_index_info
+        where  id = #{id} 
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.StockMarketIndexInfo" useGeneratedKeys="true">
+        insert into stock_market_index_info
+        ( id,market_code,market_name,pre_close_point,open_point,cur_point,
+        min_point,max_point,trade_amount,trade_volume,cur_time)
+        values (#{id},#{marketCode},#{marketName},#{preClosePoint},#{openPoint},#{curPoint},
+        #{minPoint},#{maxPoint},#{tradeAmount},#{tradeVolume},#{curTime})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.StockMarketIndexInfo" useGeneratedKeys="true">
+        insert into stock_market_index_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="marketCode != null">market_code,</if>
+                <if test="marketName != null">market_name,</if>
+                <if test="preClosePoint != null">pre_close_point,</if>
+                <if test="openPoint != null">open_point,</if>
+                <if test="curPoint != null">cur_point,</if>
+                <if test="minPoint != null">min_point,</if>
+                <if test="maxPoint != null">max_point,</if>
+                <if test="tradeAmount != null">trade_amount,</if>
+                <if test="tradeVolume != null">trade_volume,</if>
+                <if test="curTime != null">cur_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="marketCode != null">#{marketCode},</if>
+                <if test="marketName != null">#{marketName},</if>
+                <if test="preClosePoint != null">#{preClosePoint},</if>
+                <if test="openPoint != null">#{openPoint},</if>
+                <if test="curPoint != null">#{curPoint},</if>
+                <if test="minPoint != null">#{minPoint},</if>
+                <if test="maxPoint != null">#{maxPoint},</if>
+                <if test="tradeAmount != null">#{tradeAmount},</if>
+                <if test="tradeVolume != null">#{tradeVolume},</if>
+                <if test="curTime != null">#{curTime},</if>
+        </trim>
+    </insert>
+    <insert id="insertBatch">
+        insert into stock_market_index_info
+        (id, market_code, market_name, pre_close_point, open_point, cur_point, min_point,
+         max_point, trade_amount, trade_volume, cur_time)
+            values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.id},#{entity.marketCode},#{entity.marketName},#{entity.preClosePoint}
+            ,#{entity.openPoint},#{entity.curPoint},#{entity.minPoint},#{entity.maxPoint}
+            ,#{entity.tradeAmount},#{entity.tradeVolume},#{entity.curTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        market_name = VALUES(market_name),
+        pre_close_point = VALUES(pre_close_point),
+        open_point = VALUES(open_point),
+        cur_point = VALUES(cur_point),
+        min_point = VALUES(min_point),
+        max_point = VALUES(max_point),
+        trade_amount = VALUES(trade_amount),
+        trade_volume = VALUES(trade_volume)
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.me.stock.pojo.entity.StockMarketIndexInfo">
+        update stock_market_index_info
+        <set>
+                <if test="marketCode != null">
+                    market_code = #{marketCode},
+                </if>
+                <if test="marketName != null">
+                    market_name = #{marketName},
+                </if>
+                <if test="preClosePoint != null">
+                    pre_close_point = #{preClosePoint},
+                </if>
+                <if test="openPoint != null">
+                    open_point = #{openPoint},
+                </if>
+                <if test="curPoint != null">
+                    cur_point = #{curPoint},
+                </if>
+                <if test="minPoint != null">
+                    min_point = #{minPoint},
+                </if>
+                <if test="maxPoint != null">
+                    max_point = #{maxPoint},
+                </if>
+                <if test="tradeAmount != null">
+                    trade_amount = #{tradeAmount},
+                </if>
+                <if test="tradeVolume != null">
+                    trade_volume = #{tradeVolume},
+                </if>
+                <if test="curTime != null">
+                    cur_time = #{curTime},
+                </if>
+        </set>
+        where   id = #{id} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.me.stock.pojo.entity.StockMarketIndexInfo">
+        update stock_market_index_info
+        set 
+            market_code =  #{marketCode},
+            market_name =  #{marketName},
+            pre_close_point =  #{preClosePoint},
+            open_point =  #{openPoint},
+            cur_point =  #{curPoint},
+            min_point =  #{minPoint},
+            max_point =  #{maxPoint},
+            trade_amount =  #{tradeAmount},
+            trade_volume =  #{tradeVolume},
+            cur_time =  #{curTime}
+        where   id = #{id} 
+    </update>
+</mapper>
