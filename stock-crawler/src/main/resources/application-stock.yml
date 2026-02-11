@@ -1,0 +1,25 @@
+# 配置股票相关的参数
+stock:
+  # 国内大盘代码列表
+  inner:
+    - sh000001 # 上证指数
+    - sz399001 # 深证成指
+  # 国外大盘代码列表
+  outer:
+    - int_dji # 道琼斯指数
+    - int_nasdaq # 纳斯达克指数
+    - int_hangseng # 恒生指数
+    - int_nikkei # 日经指数
+    - b_FSSTI # 新加坡海峡时报指数
+  # 大盘、外盘公共的获取股票信息URL
+  marketURL: http://hq.sinajs.cn/list=
+  # 板块URL
+  blockURL: http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php
+
+# 定时任务线程池基础参数
+task:
+  pool:
+    corePoolSize: 5 # 核心线程数
+    maxPoolSize: 20 # 设置最大线程数
+    keepAliveSeconds: 300 # 设置线程活跃时间，单位秒
+    queueCapacity: 100 # 设置队列容量

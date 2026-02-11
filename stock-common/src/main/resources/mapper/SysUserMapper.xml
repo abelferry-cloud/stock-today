@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.me.stock.mapper.SysUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.me.stock.pojo.entity.SysUser">
+            <id property="id" column="id" />
+            <result property="username" column="username" />
+            <result property="password" column="password" />
+            <result property="phone" column="phone" />
+            <result property="realName" column="real_name" />
+            <result property="nickName" column="nick_name" />
+            <result property="email" column="email" />
+            <result property="status" column="status" />
+            <result property="sex" column="sex" />
+            <result property="deleted" column="deleted" />
+            <result property="createId" column="create_id" />
+            <result property="updateId" column="update_id" />
+            <result property="createWhere" column="create_where" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,username,password,phone,real_name,nick_name,
+        email,status,sex,deleted,create_id,
+        update_id,create_where,create_time,update_time
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from sys_user
+        where  id = #{id} 
+    </select>
+
+    <select id="findByUserName" resultMap="BaseResultMap">
+        select <include refid="Base_Column_List"/> from sys_user where
+        username=#{username}
+    </select>
+    <select id="getUsersInfoByMCondition" resultType="com.me.stock.pojo.domain.SysUserDomain">
+        select <include refid="Base_Column_List" />,
+        (select t2.username from sys_user as t2 where t2.id = t1.create_id) as createUserName,
+        (select t2.username from sys_user as t2 where t2.id = t1.update_id) as updateUserName
+        from sys_user as t1
+        <where>
+            <if test="startTime!=null and endTime!=null">
+                and t1.create_time between #{startTime} and #{endTime}
+            </if>
+            <if test="userName!=null and userName.trim()!=''">
+                and t1.username like '%${userName}%'
+            </if>
+            <if test="nickName!=null and nickName.trim()!=''">
+                and t1.username like '%${nickName}%'
+            </if>
+            and deleted= 1
+        </where>
+    </select>
+    <select id="findUserInfoByUserName" resultType="com.me.stock.pojo.entity.SysUser">
+        select <include refid="Base_Column_List"/> from sys_user where
+        username= #{username}
+    </select>
+    <select id="getUserOwnRoleIds" resultType="java.lang.Long">
+        SELECT role_id AS ownRoleIds
+        FROM sys_user_role
+        WHERE user_id = #{userId} AND role_id IN (
+            SELECT id FROM sys_role WHERE deleted = 1 AND status = 1
+        );
+    </select>
+
+    <select id="getUserInfoById" resultType="com.me.stock.pojo.vo.UserInfoVO">
+        select id,username,phone,nick_name,real_name,sex,status,email from sys_user where id = #{userId}
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from sys_user
+        where  id = #{id} 
+    </delete>
+    <delete id="deleteUsers">
+        delete from sys_user where id in
+        <foreach item="item" collection="userIds" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysUser" useGeneratedKeys="true">
+        insert into sys_user
+        ( id,username,password,phone,real_name,nick_name,
+        email,status,sex,deleted,create_id,
+        update_id,create_where,create_time,update_time)
+        values (#{id},#{username},#{password},#{phone},#{realName},#{nickName},
+        #{email},#{status},#{sex},#{deleted},#{createId},
+        #{updateId},#{createWhere},#{createTime},#{updateTime})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysUser" useGeneratedKeys="true">
+        insert into sys_user
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="username != null">username,</if>
+                <if test="password != null">password,</if>
+                <if test="phone != null">phone,</if>
+                <if test="realName != null">real_name,</if>
+                <if test="nickName != null">nick_name,</if>
+                <if test="email != null">email,</if>
+                <if test="status != null">status,</if>
+                <if test="sex != null">sex,</if>
+                <if test="deleted != null">deleted,</if>
+                <if test="createId != null">create_id,</if>
+                <if test="updateId != null">update_id,</if>
+                <if test="createWhere != null">create_where,</if>
+                <if test="createTime != null">create_time,</if>
+                <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="username != null">#{username},</if>
+                <if test="password != null">#{password},</if>
+                <if test="phone != null">#{phone},</if>
+                <if test="realName != null">#{realName},</if>
+                <if test="nickName != null">#{nickName},</if>
+                <if test="email != null">#{email},</if>
+                <if test="status != null">#{status},</if>
+                <if test="sex != null">#{sex},</if>
+                <if test="deleted != null">#{deleted},</if>
+                <if test="createId != null">#{createId},</if>
+                <if test="updateId != null">#{updateId},</if>
+                <if test="createWhere != null">#{createWhere},</if>
+                <if test="createTime != null">#{createTime},</if>
+                <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+    <insert id="addUser">
+        INSERT INTO sys_user (
+            sys_user.id,username, password, phone, real_name, nick_name,
+            email, status, sex, deleted, create_id,
+            update_id, create_where, create_time, update_time
+        ) VALUES (
+                     #{id},#{username}, #{password}, #{phone}, #{realName}, #{nickName},
+                     #{email}, #{status}, #{sex}, #{deleted}, #{createId},
+                     #{updateId}, #{createWhere}, #{createTime}, now()
+                 )
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.me.stock.pojo.entity.SysUser">
+        update sys_user
+        <set>
+                <if test="username != null">
+                    username = #{username},
+                </if>
+                <if test="password != null">
+                    password = #{password},
+                </if>
+                <if test="phone != null">
+                    phone = #{phone},
+                </if>
+                <if test="realName != null">
+                    real_name = #{realName},
+                </if>
+                <if test="nickName != null">
+                    nick_name = #{nickName},
+                </if>
+                <if test="email != null">
+                    email = #{email},
+                </if>
+                <if test="status != null">
+                    status = #{status},
+                </if>
+                <if test="sex != null">
+                    sex = #{sex},
+                </if>
+                <if test="deleted != null">
+                    deleted = #{deleted},
+                </if>
+                <if test="createId != null">
+                    create_id = #{createId},
+                </if>
+                <if test="updateId != null">
+                    update_id = #{updateId},
+                </if>
+                <if test="createWhere != null">
+                    create_where = #{createWhere},
+                </if>
+                <if test="createTime != null">
+                    create_time = #{createTime},
+                </if>
+                <if test="updateTime != null">
+                    update_time = #{updateTime},
+                </if>
+        </set>
+        where   id = #{id} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.me.stock.pojo.entity.SysUser">
+        update sys_user
+        set 
+            username =  #{username},
+            password =  #{password},
+            phone =  #{phone},
+            real_name =  #{realName},
+            nick_name =  #{nickName},
+            email =  #{email},
+            status =  #{status},
+            sex =  #{sex},
+            deleted =  #{deleted},
+            create_id =  #{createId},
+            update_id =  #{updateId},
+            create_where =  #{createWhere},
+            create_time =  #{createTime},
+            update_time =  #{updateTime}
+        where   id = #{id} 
+    </update>
+    <update id="updateUserInfo">
+        update sys_user
+        <set>
+            <if test="username != null">
+                username = #{username,jdbcType=VARCHAR},
+            </if>
+            <if test="password != null">
+                password = #{password,jdbcType=VARCHAR},
+            </if>
+            <if test="phone != null">
+                phone = #{phone,jdbcType=VARCHAR},
+            </if>
+            <if test="realName != null">
+                real_name = #{realName,jdbcType=VARCHAR},
+            </if>
+            <if test="nickName != null">
+                nick_name = #{nickName,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null">
+                email = #{email,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=TINYINT},
+            </if>
+            <if test="sex != null">
+                sex = #{sex,jdbcType=TINYINT},
+            </if>
+            <if test="deleted != null">
+                deleted = #{deleted,jdbcType=TINYINT},
+            </if>
+            <if test="createId != null">
+                create_id = #{createId,jdbcType=BIGINT},
+            </if>
+            <if test="updateId != null">
+                update_id = #{updateId,jdbcType=BIGINT},
+            </if>
+            <if test="createWhere != null">
+                create_where = #{createWhere,jdbcType=TINYINT},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateTime != null">
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where   id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <!-- 查询用户菜单权限（目录和菜单类型，不包含按钮） -->
+    <select id="getUserMenus" resultType="com.me.stock.pojo.vo.MenuNode">
+        SELECT
+        DISTINCT
+        p.id as id,
+        p.pid as pid,
+        p.title as title,
+        p.icon as icon,
+        p.url as path,
+        p.name as name,
+        p.order_num as orderNum
+        FROM sys_permission p
+        INNER JOIN sys_role_permission rp ON p.id = rp.permission_id
+        INNER JOIN sys_user_role ur ON ur.role_id = rp.role_id
+        WHERE ur.user_id = #{userId}
+        AND p.type IN (1, 2) -- 1:目录, 2:菜单
+        AND p.status = 1
+        AND p.deleted = 1
+        ORDER BY p.order_num
+    </select>
+
+    <!-- 查询用户按钮权限 -->
+    <select id="getUserPermissions" resultType="java.lang.String">
+        SELECT
+            DISTINCT p.code
+        FROM sys_permission p
+                 INNER JOIN sys_role_permission rp ON p.id = rp.permission_id
+                 INNER JOIN sys_user_role ur ON ur.role_id = rp.role_id
+        WHERE ur.user_id = #{userId}
+          AND p.type = 3 -- 3:按钮
+          AND p.status = 1
+          AND p.deleted = 1
+    </select>
+</mapper>

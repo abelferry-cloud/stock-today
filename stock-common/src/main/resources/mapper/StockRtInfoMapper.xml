@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.me.stock.mapper.StockRtInfoMapper">
+
+    <resultMap id="BaseResultMap" type="com.me.stock.pojo.entity.StockRtInfo">
+            <id property="id" column="id" />
+            <result property="stockCode" column="stock_code" />
+            <result property="stockName" column="stock_name" />
+            <result property="preClosePrice" column="pre_close_price" />
+            <result property="openPrice" column="open_price" />
+            <result property="curPrice" column="cur_price" />
+            <result property="minPrice" column="min_price" />
+            <result property="maxPrice" column="max_price" />
+            <result property="tradeAmount" column="trade_amount" />
+            <result property="tradeVolume" column="trade_volume" />
+            <result property="curTime" column="cur_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,stock_code,stock_name,pre_close_price,open_price,cur_price,
+        min_price,max_price,trade_amount,trade_volume,cur_time
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from stock_rt_info
+        where  id = #{id} 
+    </select>
+    <select id="getNewestStockInfo" resultType="com.me.stock.pojo.domain.StockUpdownDomain">
+        select
+            sri.trade_amount as tradeAmt,
+            sri.pre_close_price as preClosePrice,
+            (sri.max_price-sri.min_price)/sri.pre_close_price as amplitude,
+            sri.stock_code as code,
+            sri.stock_name as  name,
+            sri.cur_time as curDate,
+            sri.trade_volume as tradeVol,
+            sri.cur_price-sri.pre_close_price as increase,
+            (sri.cur_price-sri.pre_close_price) /pre_close_price as upDown,
+            sri.cur_price as tradePrice
+        from stock_rt_info as   sri
+        where sri.cur_time=#{timePoint}
+        order by upDown desc
+    </select>
+
+    <select id="getStockUpdownCount" resultType="map">
+        select
+        date_format(tmp.time,'%Y%m%d%H%i') as time ,
+        count(*) as count
+        from (select
+        (sri.cur_price-sri.pre_close_price)/sri.pre_close_price as ud,
+        sri.cur_time as time
+        from stock_rt_info sri
+        where sri.cur_time BETWEEN #{startDate} and #{endDate}
+        having ud
+        <if test="flag==1">
+            >=0.1
+        </if>
+        <if test="flag==0">
+            &lt;=-0.1
+        </if>
+        )
+        as tmp
+        group by tmp.time
+        order by tmp.time asc
+    </select>
+    <select id="getStockInfoByCodeAndDate" resultType="com.me.stock.pojo.domain.Stock4MinuteDomain">
+        select
+            sri.cur_time    as date,
+            sri.trade_amount as tradeAmt,
+            sri.stock_code as code,
+            sri.min_price as lowPrice,
+            sri.pre_close_price as preClosePrice,
+            sri.stock_name as name,
+            sri.max_price as highPrice,
+            sri.open_price as openPrice,
+            sri.trade_volume as tradeVol,
+            sri.cur_price as tradePrice
+        from stock_rt_info as sri
+        where sri.stock_code=#{code}
+          and sri.cur_time between #{startTime} and #{endTime}
+    </select>
+    <select id="getDayKLineData01" resultType="com.me.stock.pojo.domain.Stock4EvrDayDomain">
+        select
+            sri2.cur_time as date,
+            sri2.trade_amount as tradeAmt,
+            sri2.stock_code as code,
+            sri2.min_price as lowPrice,
+            sri2.stock_name as name,
+            sri2.max_price as highPrice,
+            sri2.open_price as openPrice,
+            sri2.trade_volume as tradeVol,
+            sri2.cur_price as closePrice,
+            sri2.pre_close_price as preClosePrice
+        from
+            stock_rt_info as sri2
+        where sri2.stock_code=#{stockCode}  and sri2.cur_time in (
+            select
+                max( sri.cur_time ) as closeDate
+            from
+                stock_rt_info as sri
+            where
+                sri.stock_code =#{stockCode}
+              and sri.cur_time between #{startDate} and #{endDate}
+            group by
+                date_format( sri.cur_time, '%Y%m%d' )
+        )
+        order by sri2.cur_time;
+    </select>
+
+    <select id="selectDailyMaxTime" resultType="java.util.Date">
+        select
+            max(sri.cur_time) as closeDate
+        from
+            stock_rt_info as sri
+        where
+            sri.stock_code = #{stockCode}
+          and sri.cur_time between #{startDate} and #{endDate}
+        group by
+            date_format(sri.cur_time, '%Y%m%d')
+        order by closeDate
+    </select>
+
+    <select id="getDayKLineDataByTimeList" resultType="com.me.stock.pojo.domain.Stock4EvrDayDomain">
+        select
+        sri2.cur_time as date,
+        sri2.trade_amount as tradeAmt,
+        sri2.stock_code as code,
+        sri2.min_price as lowPrice,
+        sri2.stock_name as name,
+        sri2.max_price as highPrice,
+        sri2.open_price as openPrice,
+        sri2.trade_volume as tradeVol,
+        sri2.cur_price as closePrice,
+        sri2.pre_close_price as preClosePrice
+        from
+        stock_rt_info as sri2
+        where
+        sri2.stock_code = #{stockCode}
+        and sri2.cur_time in
+        <foreach item="time" collection="timeList" open="(" separator="," close=")">
+            #{time}
+        </foreach>
+        order by sri2.cur_time
+    </select>
+
+    <select id="searchStock" resultType="java.util.Map">
+        select DISTINCT stock_code, stock_name
+        from stock_rt_info
+        where stock_code like concat('%',#{searchStr},'%')
+    </select>
+    <select id="getStockRTMainBusinessDomain" resultType="com.me.stock.pojo.domain.StockRTMainBusinessDomain">
+        select sb.stock_code as code,
+               sb.block_name as trade,
+               sb.business as business,
+               sb.stock_name as name
+        from stock_business as sb
+        where sb.stock_code = #{stockCode}
+    </select>
+    <select id="getStockWeeklyData" resultType="com.me.stock.pojo.domain.StockWeeklyInfoDomain">
+        SELECT AVG(cur_price) AS avgPrice,
+               MIN(cur_price) AS minPrice,
+               COALESCE(
+                       (SELECT open_price
+                        FROM stock_rt_info
+                        WHERE stock_code = #{stockCode}
+                          AND DATE(cur_time) = DATE_SUB(#{curTime}, INTERVAL WEEKDAY(#{curTime}) DAY)
+                        ORDER BY cur_time ASC
+                        LIMIT 1),
+                       (SELECT open_price
+                        FROM stock_rt_info
+                        WHERE stock_code = #{stockCode}
+                          AND cur_time >= DATE_SUB(#{curTime}, INTERVAL WEEKDAY(#{curTime}) DAY)
+                        ORDER BY cur_time ASC
+                        LIMIT 1)
+               )              AS openPrice,
+               MAX(cur_price) AS maxPrice,
+               IF(#{curTime} >= DATE_ADD(DATE_SUB(#{curTime}, INTERVAL WEEKDAY(#{curTime}) DAY), INTERVAL 4 DAY),
+                  (SELECT cur_price
+                   FROM stock_rt_info
+                   WHERE stock_code = #{stockCode}
+                     AND
+                       DATE(cur_time) = DATE_ADD(DATE_SUB(#{curTime}, INTERVAL WEEKDAY(#{curTime}) DAY), INTERVAL 4 DAY)
+                   ORDER BY cur_time DESC
+                   LIMIT 1),
+                  (SELECT cur_price
+                   FROM stock_rt_info
+                   WHERE stock_code = #{stockCode}
+                   ORDER BY cur_time DESC
+                   LIMIT 1)
+               )              AS closePrice,
+               MAX(cur_time)  AS maxTime,
+               #{stockCode}   AS stockCode
+        FROM stock_rt_info
+        WHERE stock_code = #{stockCode}
+          AND cur_time >= DATE_SUB(#{curTime}, INTERVAL WEEKDAY(#{curTime}) DAY)
+          AND cur_time &lt;= #{curTime};
+    </select>
+    <select id="getScreenDetail" resultType="com.me.stock.pojo.domain.Stock4MinuteDomain">
+        select sri.trade_amount as tradeAmt,
+               sri.pre_close_price as preClosePrice,
+               sri.min_price as lowPrice,
+               sri.max_price as highPrice,
+               sri.open_price as openPrice,
+               sri.trade_volume as tradeVol,
+               sri.cur_price as tradePrice,
+               sri.cur_time as date
+        from stock_rt_info as sri
+        where stock_code = #{code}
+          and cur_time = #{timePoint}
+    </select>
+    <select id="getScreenSecond" resultType="com.me.stock.pojo.domain.Stock4MinuteDomain">
+        select sri.trade_amount as tradeAmt,
+               sri.trade_volume as tradeVol,
+               sri.cur_price as tradePrice,
+               sri.cur_time as date
+        from stock_rt_info as sri
+        where stock_code = #{code}
+        limit  10
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from stock_rt_info
+        where  id = #{id} 
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.StockRtInfo" useGeneratedKeys="true">
+        insert into stock_rt_info
+        ( id,stock_code,stock_name,pre_close_price,open_price,cur_price,
+        min_price,max_price,trade_amount,trade_volume,cur_time)
+        values (#{id},#{stockCode},#{stockName},#{preClosePrice},#{openPrice},#{curPrice},
+        #{minPrice},#{maxPrice},#{tradeAmount},#{tradeVolume},#{curTime})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.StockRtInfo" useGeneratedKeys="true">
+        insert into stock_rt_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="stockCode != null">stock_code,</if>
+                <if test="stockName != null">stock_name,</if>
+                <if test="preClosePrice != null">pre_close_price,</if>
+                <if test="openPrice != null">open_price,</if>
+                <if test="curPrice != null">cur_price,</if>
+                <if test="minPrice != null">min_price,</if>
+                <if test="maxPrice != null">max_price,</if>
+                <if test="tradeAmount != null">trade_amount,</if>
+                <if test="tradeVolume != null">trade_volume,</if>
+                <if test="curTime != null">cur_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="stockCode != null">#{stockCode},</if>
+                <if test="stockName != null">#{stockName},</if>
+                <if test="preClosePrice != null">#{preClosePrice},</if>
+                <if test="openPrice != null">#{openPrice},</if>
+                <if test="curPrice != null">#{curPrice},</if>
+                <if test="minPrice != null">#{minPrice},</if>
+                <if test="maxPrice != null">#{maxPrice},</if>
+                <if test="tradeAmount != null">#{tradeAmount},</if>
+                <if test="tradeVolume != null">#{tradeVolume},</if>
+                <if test="curTime != null">#{curTime},</if>
+        </trim>
+    </insert>
+    <insert id="insertBatch">
+        insert into stock_rt_info
+        ( id,stock_code,cur_time
+        ,stock_name,open_price,pre_close_price
+        ,cur_price,max_price,min_price
+        ,trade_amount,trade_volume)
+        values
+        <foreach collection="list" item="si" separator=",">
+            (#{si.id,jdbcType=BIGINT},#{si.stockCode,jdbcType=CHAR},#{si.curTime,jdbcType=TIMESTAMP}
+            ,#{si.stockName,jdbcType=VARCHAR},#{si.openPrice,jdbcType=DECIMAL},#{si.preClosePrice,jdbcType=DECIMAL}
+            ,#{si.curPrice,jdbcType=DECIMAL},#{si.maxPrice,jdbcType=DECIMAL},#{si.minPrice,jdbcType=DECIMAL}
+            ,#{si.tradeAmount,jdbcType=BIGINT},#{si.tradeVolume,jdbcType=DECIMAL})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        stock_name = VALUES(stock_name),
+        open_price = VALUES(open_price),
+        pre_close_price = VALUES(pre_close_price),
+        cur_price = VALUES(cur_price),
+        max_price = VALUES(max_price),
+        min_price = VALUES(min_price),
+        trade_amount = VALUES(trade_amount),
+        trade_volume = VALUES(trade_volume)
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.me.stock.pojo.entity.StockRtInfo">
+        update stock_rt_info
+        <set>
+                <if test="stockCode != null">
+                    stock_code = #{stockCode},
+                </if>
+                <if test="stockName != null">
+                    stock_name = #{stockName},
+                </if>
+                <if test="preClosePrice != null">
+                    pre_close_price = #{preClosePrice},
+                </if>
+                <if test="openPrice != null">
+                    open_price = #{openPrice},
+                </if>
+                <if test="curPrice != null">
+                    cur_price = #{curPrice},
+                </if>
+                <if test="minPrice != null">
+                    min_price = #{minPrice},
+                </if>
+                <if test="maxPrice != null">
+                    max_price = #{maxPrice},
+                </if>
+                <if test="tradeAmount != null">
+                    trade_amount = #{tradeAmount},
+                </if>
+                <if test="tradeVolume != null">
+                    trade_volume = #{tradeVolume},
+                </if>
+                <if test="curTime != null">
+                    cur_time = #{curTime},
+                </if>
+        </set>
+        where   id = #{id} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.me.stock.pojo.entity.StockRtInfo">
+        update stock_rt_info
+        set
+            stock_code =  #{stockCode},
+            stock_name =  #{stockName},
+            pre_close_price =  #{preClosePrice},
+            open_price =  #{openPrice},
+            cur_price =  #{curPrice},
+            min_price =  #{minPrice},
+            max_price =  #{maxPrice},
+            trade_amount =  #{tradeAmount},
+            trade_volume =  #{tradeVolume},
+            cur_time =  #{curTime}
+        where   id = #{id}
+    </update>
+
+    <!-- Function Calling Support Queries -->
+    <select id="selectByStockCodeDesc" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from stock_rt_info
+        where stock_code = #{stockCode}
+        order by cur_time desc
+        limit 1
+    </select>
+
+    <select id="selectByCodeAndTime" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from stock_rt_info
+        where stock_code = #{stockCode}
+        <if test="currentTime != null">
+            and cur_time &lt;= #{currentTime}
+        </if>
+        order by cur_time desc
+        limit 1
+    </select>
+</mapper>

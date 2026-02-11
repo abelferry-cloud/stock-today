@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.me.stock.mapper.SysPermissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.me.stock.pojo.entity.SysPermission">
+            <id property="id" column="id" />
+            <result property="code" column="code" />
+            <result property="title" column="title" />
+            <result property="icon" column="icon" />
+            <result property="perms" column="perms" />
+            <result property="url" column="url" />
+            <result property="method" column="method" />
+            <result property="name" column="name" />
+            <result property="pid" column="pid" />
+            <result property="orderNum" column="order_num" />
+            <result property="type" column="type" />
+            <result property="status" column="status" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+            <result property="deleted" column="deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,code,title,icon,perms,url,
+        method,name,pid,order_num,type,
+        status,create_time,update_time,deleted
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from sys_permission
+        where  id = #{id} 
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from sys_permission
+        where  id = #{id} 
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysPermission" useGeneratedKeys="true">
+        insert into sys_permission
+        ( id,code,title,icon,perms,url,
+        method,name,pid,order_num,type,
+        status,create_time,update_time,deleted)
+        values (#{id},#{code},#{title},#{icon},#{perms},#{url},
+        #{method},#{name},#{pid},#{orderNum},#{type},
+        #{status},#{createTime},#{updateTime},#{deleted})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysPermission" useGeneratedKeys="true">
+        insert into sys_permission
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="code != null">code,</if>
+                <if test="title != null">title,</if>
+                <if test="icon != null">icon,</if>
+                <if test="perms != null">perms,</if>
+                <if test="url != null">url,</if>
+                <if test="method != null">method,</if>
+                <if test="name != null">name,</if>
+                <if test="pid != null">pid,</if>
+                <if test="orderNum != null">order_num,</if>
+                <if test="type != null">type,</if>
+                <if test="status != null">status,</if>
+                <if test="createTime != null">create_time,</if>
+                <if test="updateTime != null">update_time,</if>
+                <if test="deleted != null">deleted,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="code != null">#{code},</if>
+                <if test="title != null">#{title},</if>
+                <if test="icon != null">#{icon},</if>
+                <if test="perms != null">#{perms},</if>
+                <if test="url != null">#{url},</if>
+                <if test="method != null">#{method},</if>
+                <if test="name != null">#{name},</if>
+                <if test="pid != null">#{pid},</if>
+                <if test="orderNum != null">#{orderNum},</if>
+                <if test="type != null">#{type},</if>
+                <if test="status != null">#{status},</if>
+                <if test="createTime != null">#{createTime},</if>
+                <if test="updateTime != null">#{updateTime},</if>
+                <if test="deleted != null">#{deleted},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.me.stock.pojo.entity.SysPermission">
+        update sys_permission
+        <set>
+                <if test="code != null">
+                    code = #{code},
+                </if>
+                <if test="title != null">
+                    title = #{title},
+                </if>
+                <if test="icon != null">
+                    icon = #{icon},
+                </if>
+                <if test="perms != null">
+                    perms = #{perms},
+                </if>
+                <if test="url != null">
+                    url = #{url},
+                </if>
+                <if test="method != null">
+                    method = #{method},
+                </if>
+                <if test="name != null">
+                    name = #{name},
+                </if>
+                <if test="pid != null">
+                    pid = #{pid},
+                </if>
+                <if test="orderNum != null">
+                    order_num = #{orderNum},
+                </if>
+                <if test="type != null">
+                    type = #{type},
+                </if>
+                <if test="status != null">
+                    status = #{status},
+                </if>
+                <if test="createTime != null">
+                    create_time = #{createTime},
+                </if>
+                <if test="updateTime != null">
+                    update_time = #{updateTime},
+                </if>
+                <if test="deleted != null">
+                    deleted = #{deleted},
+                </if>
+        </set>
+        where   id = #{id} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.me.stock.pojo.entity.SysPermission">
+        update sys_permission
+        set 
+            code =  #{code},
+            title =  #{title},
+            icon =  #{icon},
+            perms =  #{perms},
+            url =  #{url},
+            method =  #{method},
+            name =  #{name},
+            pid =  #{pid},
+            order_num =  #{orderNum},
+            type =  #{type},
+            status =  #{status},
+            create_time =  #{createTime},
+            update_time =  #{updateTime},
+            deleted =  #{deleted}
+        where   id = #{id} 
+    </update>
+    <select id="selectAll" resultType="com.me.stock.pojo.entity.SysPermission">
+        select <include refid="Base_Column_List" />
+        from sys_permission
+        where deleted=1
+    </select>
+    <select id="findChildrenCountByParentId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM sys_permission WHERE pid=#{permissionId} AND deleted=1
+    </select>
+    <select id="getPermsByUserId" resultType="com.me.stock.pojo.entity.SysPermission">
+        select distinct <include refid="Base_Column_List" />
+        from sys_permission
+        where id in (select permission_id
+        from sys_role_permission
+        where role_id in (select sys_user_role.role_id
+        from sys_user_role
+        where user_id=#{id}))
+    </select>
+    <insert id="insertPerms">
+        insert into sys_role_permission
+        ( id,role_id,permission_id
+        ,create_time)
+        values
+        <foreach collection="perms" item="perm" separator=",">
+            (#{perm.id,jdbcType=BIGINT},#{perm.roleId,jdbcType=BIGINT},#{perm.permissionId,jdbcType=BIGINT}
+            ,now())
+        </foreach>
+    </insert>
+    <insert id="addPerms">
+        insert into sys_permission
+        ( id,code,title
+        ,icon,perms,url
+        ,method,name,pid
+        ,order_num,type
+        ,create_time
+        )
+        values (#{addPerms.id,jdbcType=BIGINT},#{addPerms.code,jdbcType=VARCHAR},#{addPerms.title,jdbcType=VARCHAR}
+               ,#{addPerms.icon,jdbcType=VARCHAR},#{addPerms.perms,jdbcType=VARCHAR},#{addPerms.url,jdbcType=VARCHAR}
+               ,#{addPerms.method,jdbcType=VARCHAR},#{addPerms.name,jdbcType=VARCHAR},#{addPerms.pid,jdbcType=BIGINT}
+               ,#{addPerms.orderNum,jdbcType=INTEGER},#{addPerms.type,jdbcType=TINYINT},now()
+               )
+    </insert>
+    <update id="updatePerms">
+        update sys_permission
+        set
+            code =  #{addPerms.code,jdbcType=VARCHAR},
+            title =  #{addPerms.title,jdbcType=VARCHAR},
+            icon =  #{addPerms.icon,jdbcType=VARCHAR},
+            perms =  #{addPerms.perms,jdbcType=VARCHAR},
+            url =  #{addPerms.url,jdbcType=VARCHAR},
+            method =  #{addPerms.method,jdbcType=VARCHAR},
+            name =  #{addPerms.name,jdbcType=VARCHAR},
+            pid =  #{addPerms.pid,jdbcType=BIGINT},
+            order_num =  #{addPerms.orderNum,jdbcType=INTEGER},
+            type =  #{addPerms.type,jdbcType=TINYINT},
+            update_time =  now()
+        where   id = #{addPerms.id,jdbcType=BIGINT}
+    </update>
+</mapper>

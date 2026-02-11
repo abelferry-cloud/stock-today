@@ -1,0 +1,28 @@
+# RAG功能测试配置文件
+spring:
+  ai:
+    vectorstore:
+      pinecone:
+        api-key: ${PINECONE_API_KEY:pcsk_5C6WXW_5yDiVMryga55igtZoMjormqCCMaEvcJtQ1gLmMVtYCLLjgJ8SdCbbHHvrR6BfZq}
+        index-name: stock-analysis-index
+
+    openai:
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: ${DASHSCOPE_API_KEY:sk-67e26ed4c90b4d14b99e58664e6189d7}
+      embedding:
+        options:
+          model: text-embedding-v4
+
+# 自定义配置：RAG向量检索参数
+app:
+  rag:
+    # 向量检索返回的Top-K结果数量
+    top-k: 5
+    # 相似度阈值（0-1），低于此值的结果将被过滤
+    similarity-threshold: 0.7
+
+# 测试日志配置
+logging:
+  level:
+    com.stock.platform: DEBUG
+    org.springframework.ai: DEBUG

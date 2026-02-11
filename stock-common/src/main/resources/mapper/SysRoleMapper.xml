@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.me.stock.mapper.SysRoleMapper">
+
+    <resultMap id="BaseResultMap" type="com.me.stock.pojo.entity.SysRole">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="description" column="description" />
+            <result property="status" column="status" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+            <result property="deleted" column="deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,description,status,create_time,update_time,
+        deleted
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from sys_role
+        where  id = #{id} 
+    </select>
+    <select id="getAllRole" resultType="com.me.stock.pojo.vo.RoleVO">
+        SELECT
+            id,
+            name,
+            description,
+            status,
+            create_time,
+            update_time,
+            deleted
+        FROM sys_role
+        WHERE deleted = 1 AND status = 1
+        ORDER BY create_time DESC;
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from sys_role
+        where  id = #{id} 
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysRole" useGeneratedKeys="true">
+        insert into sys_role
+        ( id,name,description,status,create_time,update_time,
+        deleted)
+        values (#{id},#{name},#{description},#{status},#{createTime},#{updateTime},
+        #{deleted})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysRole" useGeneratedKeys="true">
+        insert into sys_role
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="name != null">name,</if>
+                <if test="description != null">description,</if>
+                <if test="status != null">status,</if>
+                <if test="createTime != null">create_time,</if>
+                <if test="updateTime != null">update_time,</if>
+                <if test="deleted != null">deleted,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="name != null">#{name},</if>
+                <if test="description != null">#{description},</if>
+                <if test="status != null">#{status},</if>
+                <if test="createTime != null">#{createTime},</if>
+                <if test="updateTime != null">#{updateTime},</if>
+                <if test="deleted != null">#{deleted},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.me.stock.pojo.entity.SysRole">
+        update sys_role
+        <set>
+                <if test="name != null">
+                    name = #{name},
+                </if>
+                <if test="description != null">
+                    description = #{description},
+                </if>
+                <if test="status != null">
+                    status = #{status},
+                </if>
+                <if test="createTime != null">
+                    create_time = #{createTime},
+                </if>
+                <if test="updateTime != null">
+                    update_time = #{updateTime},
+                </if>
+                <if test="deleted != null">
+                    deleted = #{deleted},
+                </if>
+        </set>
+        where   id = #{id} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.me.stock.pojo.entity.SysRole">
+        update sys_role
+        set 
+            name =  #{name},
+            description =  #{description},
+            status =  #{status},
+            create_time =  #{createTime},
+            update_time =  #{updateTime},
+            deleted =  #{deleted}
+        where   id = #{id} 
+    </update>
+
+    <select id="selectAll" resultType="com.me.stock.pojo.entity.SysRole">
+        select <include refid="Base_Column_List" />
+        from sys_role
+        where deleted=1
+    </select>
+    <select id="getRoleByUserId" resultType="com.me.stock.pojo.entity.SysRole">
+        select <include refid="Base_Column_List" />
+        from sys_role
+        where id in (
+        select role_id
+        from sys_user_role
+        where user_id = #{id})
+    </select>
+
+    <update id="deleteRoles">
+        update sys_role
+        set deleted=0,
+            update_time=now()
+        where id=#{roleId}
+    </update>
+    <insert id="addRole">
+        insert into sys_role
+        ( id,name,description
+        ,create_time)
+        values (#{role.id,jdbcType=BIGINT},#{role.name,jdbcType=VARCHAR},#{role.description,jdbcType=VARCHAR},now())
+    </insert>
+    <update id="updateRoleStatus">
+        update sys_role
+        set
+            status =  #{status},
+            update_time = now()
+        where   id = #{roleId}
+    </update>
+</mapper>

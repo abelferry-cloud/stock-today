@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.me.stock.mapper.SysRolePermissionMapper">
+
+    <resultMap id="BaseResultMap" type="com.me.stock.pojo.entity.SysRolePermission">
+            <id property="id" column="id" />
+            <result property="roleId" column="role_id" />
+            <result property="permissionId" column="permission_id" />
+            <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,role_id,permission_id,create_time
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from sys_role_permission
+        where  id = #{id} 
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from sys_role_permission
+        where  id = #{id} 
+    </delete>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysRolePermission" useGeneratedKeys="true">
+        insert into sys_role_permission
+        ( id,role_id,permission_id,create_time)
+        values (#{id},#{roleId},#{permissionId},#{createTime})
+    </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysRolePermission" useGeneratedKeys="true">
+        insert into sys_role_permission
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="id != null">id,</if>
+                <if test="roleId != null">role_id,</if>
+                <if test="permissionId != null">permission_id,</if>
+                <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="id != null">#{id},</if>
+                <if test="roleId != null">#{roleId},</if>
+                <if test="permissionId != null">#{permissionId},</if>
+                <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="com.me.stock.pojo.entity.SysRolePermission">
+        update sys_role_permission
+        <set>
+                <if test="roleId != null">
+                    role_id = #{roleId},
+                </if>
+                <if test="permissionId != null">
+                    permission_id = #{permissionId},
+                </if>
+                <if test="createTime != null">
+                    create_time = #{createTime},
+                </if>
+        </set>
+        where   id = #{id} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="com.me.stock.pojo.entity.SysRolePermission">
+        update sys_role_permission
+        set 
+            role_id =  #{roleId},
+            permission_id =  #{permissionId},
+            create_time =  #{createTime}
+        where   id = #{id} 
+    </update>
+    <select id="getPermsByRoleId" resultType="java.lang.Long">
+        select permission_id
+        from sys_role_permission
+        where role_id=#{roleId}
+    </select>
+    <delete id="deleteByPermissionId">
+        DELETE FROM sys_role_permission WHERE permission_id=#{permissionId}
+    </delete>
+    <delete id="deleteByRoleId">
+        delete
+        from sys_role_permission
+        where role_id=#{id}
+    </delete>
+</mapper>
