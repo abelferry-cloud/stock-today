@@ -4,141 +4,146 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AI and Distributed Architecture-Based Intelligent Stock Data Analysis Platform. A comprehensive stock data analysis system covering data collection (crawling), cleaning, storage, RAG knowledge base construction, and AI-driven natural language querying.
+**Stock Today** is an AI-powered stock analysis platform built as a multi-module Maven project with Spring Boot 3.2.5 and Java 17. The platform combines real-time stock data crawling with AI-powered intelligent analysis using RAG (Retrieval-Augmented Generation).
 
-**Tech Stack:** Java 17, Spring Boot 3.2.5, Spring AI 1.0.0-M4, MyBatis, MySQL, Redis, RabbitMQ, DeepSeek AI
-
-## Build and Run Commands
+## Build Commands
 
 ```bash
-# Build and compile
-mvn clean compile
+# Build entire project (from root)
+mvn clean install
+
+# Build specific module
+mvn clean install -pl stock-analysis-ai
+mvn clean install -pl stock-crawler
+mvn clean install -pl stock-common
+
+# Build without running tests
+mvn clean install -DskipTests
 
 # Run tests
 mvn test
 
-# Run specific test class
-mvn test -Dtest=ClassName
+# Run the AI application (port 8080, context-path: /api)
+cd stock-analysis-ai && mvn spring-boot:run
 
-# Run application (development)
-mvn spring-boot:run
-
-# Package as JAR
-mvn clean package
-
-# Run JAR directly
-java -jar target/stock-analysis-platform-1.0.0.jar
+# Run the crawler application
+cd stock-crawler && mvn spring-boot:run
 ```
 
-## Architecture Overview
-
-### Layer Architecture
-
-The application follows a strict layered architecture with clear separation of concerns:
+## Module Architecture
 
 ```
-Controller Layer (controller/)    → Thin HTTP request/response handling
-              ↓
-Service Layer (service/)          → Business logic, validation, orchestration
-              ↓
-Integration Layer                 → External service calls (AI, DB, cache)
+stock-today/
+├── stock-common/          # Shared module - entities, mappers, DTOs
+├── stock-analysis-ai/     # Main AI service (port 8080, /api)
+└── stock-crawler/         # Scheduled data crawler with XXL-Job
 ```
 
-**Key Principle:** Controllers should be thin - only handle HTTP I/O. All business logic belongs in the service layer.
+### stock-common
+Shared library containing:
+- **MyBatis mappers** for database operations (StockRtInfo, StockBusiness, etc.)
+- **Entity classes** mapped to MySQL tables
+- **Domain objects** (Stock4EvrDayDomain, StockUpdownDomain, etc.)
+- **System entities** (SysUser, SysRole, SysPermission - for user management)
+- **RabbitMQ configuration properties**
+- **Utility classes** (DateTimeUtil, IdWorker, ParserStockInfoUtil)
 
-### Service Layer Organization
+### stock-analysis-ai (Main Application)
+Primary service running on port 8080 with context-path `/api`.
 
-- **`ChatService`** - Business logic for chat operations (validation, error handling, logging)
-- **`DeepSeekService`** - AI integration layer (direct Spring AI ChatClient wrapper)
+**Entry Point**: `com.stock.platform.StockAnalysisApplication`
 
-When adding new features, follow this pattern:
-1. Create a business logic service (`*Service`) that handles validation and orchestration
-2. Create an integration service for external API calls if needed
-3. Keep controllers thin - just delegate to services and wrap responses
+**Key Features**:
+- **AI Chat Interface**: Regular (`POST /api/chat/send`) and streaming (`POST /api/chat/stream`) endpoints
+- **RAG System**: Retrieves stock data from Pinecone vector store to enhance AI responses
+- **Conversation Management**: Create/retrieve/delete conversations with message history
+- **API Key Rotation**: Manages multiple DeepSeek API keys with usage monitoring
+- **Vector Store Consumer**: Listens for stock data updates via RabbitMQ
 
-### Response Wrapper Pattern
+**Key Services**:
+- `ChatService` - Handles AI chat with RAG context injection
+- `RagRetrievalService` - Retrieves relevant documents from Pinecone based on query
+- `ConversationService` - Manages conversation persistence
+- `ApiKeyRotationService` - Rotates API keys for load balancing and monitoring
 
-The project uses **`Result<T>`** as the standardized API response wrapper (not the old `Response<T>`). Always return `Result<T>` from controllers:
+**Configuration** (`application.yml`):
+- DeepSeek as primary AI model (`deepseek-reasoner`)
+- Aliyun DashScope (OpenAI-compatible) as secondary model for embeddings
+- Pinecone vector store (index: `stock-analysis`)
+- MySQL, Redis, RabbitMQ integration
 
-```java
-return Result.success(data);
-return Result.error(ResultCode.SOME_ERROR, "message");
-```
+### stock-crawler
+Data collection service running scheduled tasks via XXL-Job.
 
-Exception handling is centralized in `GlobalExceptionHandler` - it automatically converts exceptions to `Result<?>` responses.
+**Entry Point**: `com.me.spring.jobApplication`
 
-### AI Integration (Spring AI)
+**Key Features**:
+- **XXL-Job Integration**: Distributed task scheduling
+- **RabbitMQ Producer**: Publishes crawled stock data for AI module consumption
+- **HttpClient**: Web scraping for stock data
 
-The project uses Spring AI with DeepSeek API (OpenAI-compatible). Key configuration in `application.yml`:
+**Key Classes**:
+- `StockJob` - XXL-Job task handlers
+- `StockTimerTaskService` - Scheduled crawling logic
 
-```yaml
-spring.ai.openai:
-  api-key: ${DEEPSEEK_API_KEY:...}
-  base-url: https://api.deepseek.com
-  chat.options.model: deepseek-chat
-```
+## Technology Stack
 
-**Streaming Responses:** The application supports streaming chat responses via WebFlux `Flux<String>`. Use `chatClient.prompt().stream().content()` for streaming, `chatClient.prompt().call().content()` for regular responses.
+| Component | Technology |
+|-----------|-----------|
+| Framework | Spring Boot 3.2.5, Java 17 |
+| Build | Maven (multi-module) |
+| Database | MySQL with MyBatis |
+| Cache | Redis (Lettuce) |
+| Message Queue | RabbitMQ |
+| AI | Spring AI 1.0.0, DeepSeek, OpenAI/Aliyun |
+| Vector Store | Pinecone |
+| Scheduling | XXL-Job 2.4.0 |
+| API Docs | Knife4j 4.5.0 (OpenAPI 3) |
+| Streaming | Spring WebFlux |
 
-### Async Processing
+## RAG Architecture
 
-The application has three async mechanisms:
-1. **`@EnableAsync`** - For simple async method execution
-2. **RabbitMQ** - Message queue for durable async processing (configured in `RabbitMQConfig`)
-3. **`@EnableScheduling`** - For scheduled tasks (e.g., periodic stock data crawling)
+The platform uses Retrieval-Augmented Generation for intelligent stock analysis:
 
-When implementing the stock crawling pipeline, use RabbitMQ queues defined in `RabbitMQConfig`:
-- `stock.crawl.queue` - Trigger crawling tasks
-- `stock.data.queue` - Process crawled data
-- `rag.build.queue` - Async RAG knowledge base updates
+1. **User Query** -> `ChatController`
+2. **Keyword Detection** -> `RagRetrievalService.requiresRagRetrieval()` checks for stock-related terms
+3. **Vector Search** -> `RagRetrievalService.retrieveRelevantContext()` queries Pinecone
+4. **Context Injection** -> Retrieved stock data is injected into AI prompt
+5. **AI Response** -> DeepSeek model generates analysis with context
 
-### Database Layer (MyBatis)
+**RAG Parameters** (configurable in `application.yml`):
+- `app.rag.chunk-size`: 1000 (document chunking)
+- `app.rag.chunk-overlap`: 200
+- `app.rag.top-k`: 5 (results returned)
+- `app.rag.similarity-threshold`: 0.7
 
-- MyBatis XML mappers go in `src/main/resources/mapper/`
-- Mapper interfaces go in `mapper/`
-- Entity classes go in `entity/`
-- Configuration: `map-underscore-to-camel-case: true` (database column `stock_name` → entity field `stockName`)
+## Environment Variables
 
-### RAG Knowledge Base
+The application requires these environment variables (or set in `application.yml`):
+- `DEEPSEEK_API_KEY` - Primary DeepSeek API key
+- `DEEPSEEK_API_KEY01` through `DEEPSEEK_API_KEY04` - Additional keys for rotation
+- `DASHSCOPE_API_KEY` - Aliyun DashScope API key (embeddings)
+- `PINECONE_API_KEY` - Pinecone vector store API key
 
-Redis is configured as both cache and vector store for RAG:
-```yaml
-spring.ai.vectorstore.redis:
-  uri: redis://localhost:6379
-  index-name: stock-knowledge
-  prefix: "doc:"
-```
+## Database Schema
 
-RAG configuration in `application.yml`:
-- `app.rag.chunk-size: 1000`
-- `app.rag.chunk-overlap: 200`
-- `app.rag.top-k: 5`
+The platform uses MySQL with the following key entity types:
+- **Stock Data**: `StockRtInfo`, `StockBlockRtInfo`, `StockMarketIndexInfo`, `StockOuterMarketIndexInfo`
+- **Business Data**: `StockBusiness`
+- **User Management**: `SysUser`, `SysRole`, `SysPermission`, `SysUserRole`, `SysRolePermission`
+- **System Logs**: `SysLog`
+- **AI Module**: `Conversation`, `Message`
 
-## Project Implementation Status
+MyBatis mapper XML files are located in `src/main/resources/mapper/`.
 
-**Implemented:**
-- Chat functionality with streaming support (`ChatController`, `ChatService`)
-- Infrastructure configurations (MySQL, Redis, RabbitMQ, MyBatis, Spring AI)
-- Unified response wrappers (`Result<T>`)
-- Global exception handling
+## API Documentation
 
-**Planned (not yet implemented):**
-- Stock data crawling from third-party websites (`crawler/` package)
-- Database entities and MyBatis mappers for stock data
-- RAG knowledge base construction (`ai/` package)
-- RabbitMQ message consumers for async processing
-- Scheduled tasks for periodic data crawling
+Access Knife4j API documentation at: `http://localhost:8080/api/doc.html`
 
-## Configuration Notes
+## Important Notes
 
-- All external service credentials use environment variable fallbacks (e.g., `${DEEPSEEK_API_KEY:default}`)
-- Server runs on port 8080 with context path `/api`
-- Logs written to `logs/stock-platform.log` with 100MB rotation
-- MyBatis mappers auto-discovered from `classpath:mapper/**/*.xml`
-
-## Adding New Features
-
-1. **New REST endpoint:** Create controller method → add business logic in service → return `Result<T>`
-2. **New async task:** Create RabbitMQ listener in `rabbitmq/` with `@RabbitListener`
-3. **New database entity:** Create entity class, MyBatis mapper interface, and XML mapper
-4. **New scheduled task:** Create method with `@Scheduled` in a service class
+- The codebase uses **Chinese comments** with English class/method names
+- MyBatis requires `-parameters` compiler flag (configured in parent POM)
+- Mapper scanning: `com.stock.platform.mapper` (AI module), `com.me.stock.mapper` (crawler/common)
+- RabbitMQ virtual host: `/stock-today`
+- No test files exist yet - testing framework needs implementation
