@@ -35,8 +35,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.fasterxml.jackson.core.io.NumberInput.parseBigDecimal;
-
 @Slf4j
 @Service
 public class StockTimerTaskServiceImpl implements StockTimerTaskService {
@@ -497,27 +495,6 @@ public class StockTimerTaskServiceImpl implements StockTimerTaskService {
             log.error("发送股票数据到向量队列失败: stockCode={}, dataType={}, error={}",
                     stockCode, dataType, e.getMessage());
             // 不抛出异常，避免影响主流程
-        }
-    }
-
-    /**
-     * 批量发送股票数据到RAG知识库向量队列
-     *
-     * @param messages 消息列表
-     */
-    private void batchSendToVectorQueue(List<StockDataMessage> messages) {
-        try {
-            for (StockDataMessage message : messages) {
-                rabbitTemplate.convertAndSend(
-                        rabbitMQProperties.getDataExchange(),
-                        rabbitMQProperties.getVectorRoutingKey(),
-                        message
-                );
-            }
-            log.debug("成功批量发送股票数据到向量队列: count={}", messages.size());
-        } catch (Exception e) {
-            log.error("批量发送股票数据到向量队列失败: count={}, error={}",
-                    messages.size(), e.getMessage());
         }
     }
 

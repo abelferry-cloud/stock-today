@@ -16,6 +16,21 @@ spring:
         options:
           model: text-embedding-v3
           dimensions: 1024
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: jovan
+    password: 123456
+    # 开启确认模式机制（生产端）
+    publisher-confirm-type: CORRELATED # 异步回调
+    publisher-returns: true # 消息路由失败回调
+    template:
+      mandatory: true # 强制回调
+    # 开启确认模式机制（消费端）
+    listener:
+      simple:
+        acknowledge-mode: manual # 手动确认ack
+        prefetch: 1 # 限流，防止消费者负载过重
 
 server:
   port: 8080
