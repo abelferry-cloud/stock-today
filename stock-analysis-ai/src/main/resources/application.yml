@@ -9,6 +9,14 @@ spring:
           model: deepseek-chat
           temperature: 0.7
 
+    openai: # 阿里云百炼平台兼容OpenAI，所以这里使用阿里云百炼平台地址
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      api-key: sk-67e26ed4c90b4d14b99e58664e6189d7
+      embedding:
+        options:
+          model: text-embedding-v3
+          dimensions: 1024
+
 server:
   port: 8080
 

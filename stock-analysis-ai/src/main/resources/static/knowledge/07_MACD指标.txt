@@ -1,0 +1,7 @@
+MACD（Moving Average Convergence Divergence，指数平滑异同移动平均线）是常用的技术指标之一。
+MACD由快速线（DIF）、慢速线（DEA）和柱状线（MACD柱）三部分组成。
+DIF是12日EMA（指数移动平均线）减去26日EMA，DEA是DIF的9日EMA。
+MACD柱状线 = 2 × (DIF - DEA)，当DIF在DEA之上时，柱状线为正（通常用红色表示），当DIF在DEA之下时，柱状线为负（通常用绿色表示）。
+MACD的应用法则：1) DIF上穿DEA形成金叉，买入信号；2) DIF下穿DEA形成死叉，卖出信号；3) MACD柱状线由负转正，买入信号；4) MACD柱状线由正转负，卖出信号。
+MACD背离：价格创新高但MACD未创新高为顶背离，预示下跌；价格创新低但MACD未创新低为底背离，预示上涨。
+MACD适合趋势判断，在震荡市中容易出现虚假信号。
