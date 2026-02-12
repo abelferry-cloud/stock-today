@@ -1,7 +1,7 @@
 package com.stock.platform.service.serviceImpl;
 
-import com.stock.platform.pojo.dto.request.ChatRequest;
-import com.stock.platform.pojo.dto.response.ChatResponse;
+import com.stock.platform.dto.request.ChatRequest;
+import com.stock.platform.dto.response.ChatResponse;
 import com.stock.platform.service.ChatService;
 import com.stock.platform.service.ConversationService;
 import com.stock.platform.service.RagRetrievalService;

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.stock.platform.mapper.MessageMapper">
 
-    <resultMap id="BaseResultMap" type="com.stock.platform.pojo.entity.Message">
+    <resultMap id="BaseResultMap" type="com.stock.platform.entity.Message">
         <id column="id" property="id"/>
         <result column="conversation_id" property="conversationId"/>
         <result column="role" property="role"/>
@@ -11,7 +11,7 @@
         <result column="created_at" property="createdAt"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.stock.platform.pojo.entity.Message" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.stock.platform.entity.Message" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO message (conversation_id, role, content, tokens)
         VALUES (#{conversationId}, #{role}, #{content}, #{tokens})
     </insert>

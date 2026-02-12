@@ -56,7 +56,7 @@ spring:
   ai:
     deepseek:
       # API Key（供 Spring AI 自动配置使用）
-      api-key: ${DEEPSEEK_API_KEY:sk-c96bbe40ee464ebb9d6d732ac877229d}  # 空默认值
+      api-key: ${DEEPSEEK_API_KEY}
       base-url: https://api.deepseek.com
       chat:
         options:
@@ -64,15 +64,15 @@ spring:
           temperature: 0.7
     openai: # 阿里云百炼平台兼容OpenAI，所以这里使用阿里云百炼平台地址
       base-url: https://dashscope.aliyuncs.com/compatible-mode
-      api-key: ${DASHSCOPE_API_KEY:sk-67e26ed4c90b4d14b99e58664e6189d7}  # 空默认值
+      api-key: ${DASHSCOPE_API_KEY}
       embedding:
         options:
           model: text-embedding-v4
 
     vectorstore:
       pinecone:
-         api-key: ${PINECONE_API_KEY:pcsk_5C6WXW_5yDiVMryga55igtZoMjormqCCMaEvcJtQ1gLmMVtYCLLjgJ8SdCbbHHvrR6BfZq}
-         index-name: stock-analysis-index
+        api-key: ${PINECONE_API_KEY}
+        index-name: stock-analysis
 
 # 自定义配置：RAG向量检索参数
 app:
@@ -87,10 +87,10 @@ app:
     similarity-threshold: 0.7
   api-key:
     keys:
-          - ${DEEPSEEK_API_KEY01:}
-          - ${DEEPSEEK_API_KEY02:}
-          - ${DEEPSEEK_API_KEY03:}
-          - ${DEEPSEEK_API_KEY04:}
+          - ${DEEPSEEK_API_KEY01}
+          - ${DEEPSEEK_API_KEY02}
+          - ${DEEPSEEK_API_KEY03}
+          - ${DEEPSEEK_API_KEY04}
 
 
 

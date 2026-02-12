@@ -115,19 +115,4 @@ public interface StockRtInfoMapper {
      * @return Stock4MinuteDomain
      */
     List<Stock4MinuteDomain> getScreenSecond(String code);
-
-    /**
-     * Function Calling Support: 根据股票代码查询最新数据
-     * @param stockCode 股票代码
-     * @return StockRtInfo 最新股票实时信息
-     */
-    StockRtInfo selectByStockCodeDesc(@Param("stockCode") String stockCode);
-
-    /**
-     * Function Calling Support: 根据股票代码和时间查询数据
-     * @param stockCode 股票代码
-     * @param currentTime 查询时间点
-     * @return StockRtInfo 股票实时信息
-     */
-    StockRtInfo selectByCodeAndTime(@Param("stockCode") String stockCode, @Param("currentTime") Date currentTime);
 }

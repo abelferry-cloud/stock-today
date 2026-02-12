@@ -1,6 +1,6 @@
 package com.stock.platform.mapper;
 
-import com.stock.platform.pojo.entity.Message;
+import com.stock.platform.entity.Message;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

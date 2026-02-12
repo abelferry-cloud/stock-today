@@ -323,7 +323,7 @@
     </update>
     <update id="updateByPrimaryKey" parameterType="com.me.stock.pojo.entity.StockRtInfo">
         update stock_rt_info
-        set
+        set 
             stock_code =  #{stockCode},
             stock_name =  #{stockName},
             pre_close_price =  #{preClosePrice},
@@ -334,28 +334,6 @@
             trade_amount =  #{tradeAmount},
             trade_volume =  #{tradeVolume},
             cur_time =  #{curTime}
-        where   id = #{id}
+        where   id = #{id} 
     </update>
-
-    <!-- Function Calling Support Queries -->
-    <select id="selectByStockCodeDesc" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List" />
-        from stock_rt_info
-        where stock_code = #{stockCode}
-        order by cur_time desc
-        limit 1
-    </select>
-
-    <select id="selectByCodeAndTime" resultMap="BaseResultMap">
-        select
-        <include refid="Base_Column_List" />
-        from stock_rt_info
-        where stock_code = #{stockCode}
-        <if test="currentTime != null">
-            and cur_time &lt;= #{currentTime}
-        </if>
-        order by cur_time desc
-        limit 1
-    </select>
 </mapper>

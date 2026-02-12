@@ -1,7 +1,7 @@
 package com.stock.platform.service;
 
-import com.stock.platform.pojo.dto.request.ChatRequest;
-import com.stock.platform.pojo.dto.response.ChatResponse;
+import com.stock.platform.dto.request.ChatRequest;
+import com.stock.platform.dto.response.ChatResponse;
 import reactor.core.publisher.Flux;
 
 /**

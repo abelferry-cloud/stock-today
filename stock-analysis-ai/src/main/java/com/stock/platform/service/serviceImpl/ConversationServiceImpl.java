@@ -1,7 +1,7 @@
 package com.stock.platform.service.serviceImpl;
 
-import com.stock.platform.pojo.entity.Conversation;
-import com.stock.platform.pojo.entity.Message;
+import com.stock.platform.entity.Conversation;
+import com.stock.platform.entity.Message;
 import com.stock.platform.mapper.ConversationMapper;
 import com.stock.platform.mapper.MessageMapper;
 import com.stock.platform.service.ConversationService;

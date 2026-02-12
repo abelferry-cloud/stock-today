@@ -1,9 +1,9 @@
 package com.stock.platform.controller;
 
 import com.stock.platform.common.result.Result;
-import com.stock.platform.pojo.dto.response.ConversationDetailResponse;
-import com.stock.platform.pojo.entity.Conversation;
-import com.stock.platform.pojo.entity.Message;
+import com.stock.platform.dto.response.ConversationDetailResponse;
+import com.stock.platform.entity.Conversation;
+import com.stock.platform.entity.Message;
 import com.stock.platform.mapper.MessageMapper;
 import com.stock.platform.service.ConversationService;
 import io.swagger.v3.oas.annotations.Operation;

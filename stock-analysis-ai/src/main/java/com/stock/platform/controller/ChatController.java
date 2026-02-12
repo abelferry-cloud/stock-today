@@ -1,8 +1,8 @@
 package com.stock.platform.controller;
 
 import com.stock.platform.common.result.Result;
-import com.stock.platform.pojo.dto.request.ChatRequest;
-import com.stock.platform.pojo.dto.response.ChatResponse;
+import com.stock.platform.dto.request.ChatRequest;
+import com.stock.platform.dto.response.ChatResponse;
 import com.stock.platform.service.ChatService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

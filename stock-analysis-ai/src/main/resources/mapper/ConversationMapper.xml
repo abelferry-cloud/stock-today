@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.stock.platform.mapper.ConversationMapper">
 
-    <resultMap id="BaseResultMap" type="com.stock.platform.pojo.entity.Conversation">
+    <resultMap id="BaseResultMap" type="com.stock.platform.entity.Conversation">
         <id column="id" property="id"/>
         <result column="conversation_id" property="conversationId"/>
         <result column="title" property="title"/>
@@ -20,12 +20,12 @@
         WHERE conversation_id = #{conversationId}
     </select>
 
-    <insert id="insert" parameterType="com.stock.platform.pojo.entity.Conversation" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="com.stock.platform.entity.Conversation" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO conversation (conversation_id, title, user_message_count, ai_message_count, status)
         VALUES (#{conversationId}, #{title}, #{userMessageCount}, #{aiMessageCount}, #{status})
     </insert>
 
-    <update id="update" parameterType="com.stock.platform.pojo.entity.Conversation">
+    <update id="update" parameterType="com.stock.platform.entity.Conversation">
         UPDATE conversation
         SET title = #{title},
             status = #{status}

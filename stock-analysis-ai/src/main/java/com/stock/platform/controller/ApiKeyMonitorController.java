@@ -1,7 +1,6 @@
 package com.stock.platform.controller;
 
 import com.stock.platform.common.result.Result;
-import com.stock.platform.pojo.dto.response.ApiKeyUsageResponse;
 import com.stock.platform.service.ApiKeyRotationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

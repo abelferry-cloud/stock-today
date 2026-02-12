@@ -1,6 +1,6 @@
 package com.stock.platform.service;
 
-import com.stock.platform.pojo.entity.Conversation;
+import com.stock.platform.entity.Conversation;
 
 import java.util.List;
 

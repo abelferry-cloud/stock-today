@@ -1,10 +1,12 @@
 package com.stock.platform.mapper;
 
-import com.stock.platform.pojo.entity.Conversation;
+import com.stock.platform.entity.Conversation;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 对话记录 Mapper
