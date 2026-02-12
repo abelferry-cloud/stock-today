@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.me.spring.stockanalysisai.common.Constants;
 import com.me.spring.stockanalysisai.pojo.response.KnowledgeBaseStatusVO;
 import com.me.spring.stockanalysisai.service.KnowledgeBaseService;
+import com.me.spring.stockanalysisai.service.VectorStoreService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     private final ResourceLoader resourceLoader;
     private final ObjectMapper objectMapper;
+    private final VectorStoreService vectorStoreService;
 
     @Override
     public String loadSystemPrompt() {
@@ -109,6 +111,52 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         } catch (Exception e) {
             log.error("获取知识库状态失败", e);
             throw new RuntimeException("获取知识库状态失败", e);
+        }
+    }
+
+    @Override
+    public boolean addDynamicDocument(Document document) {
+        try {
+            log.info("开始动态添加文档到知识库: documentId={}", document.getId());
+
+            // 将文档添加到向量存储
+            boolean success = vectorStoreService.addDocument(document);
+
+            if (success) {
+                log.info("成功动态添加文档到知识库: documentId={}, title={}",
+                        document.getId(), document.getMetadata().get("title"));
+            } else {
+                log.warn("动态添加文档到知识库失败: documentId={}", document.getId());
+            }
+
+            return success;
+        } catch (Exception e) {
+            log.error("动态添加文档到知识库异常: documentId={}, error={}",
+                    document.getId(), e.getMessage(), e);
+            return false;
+        }
+    }
+
+    @Override
+    public int addDynamicDocuments(List<Document> documents) {
+        if (documents == null || documents.isEmpty()) {
+            log.warn("文档列表为空，跳过动态添加操作");
+            return 0;
+        }
+
+        try {
+            log.info("开始动态批量添加 {} 个文档到知识库", documents.size());
+
+            // 将文档列表添加到向量存储
+            int successCount = vectorStoreService.addDocuments(documents);
+
+            log.info("动态批量添加文档完成: 成功 {}/{}", successCount, documents.size());
+
+            return successCount;
+        } catch (Exception e) {
+            log.error("动态批量添加文档到知识库异常: count={}, error={}",
+                    documents.size(), e.getMessage(), e);
+            return 0;
         }
     }
 

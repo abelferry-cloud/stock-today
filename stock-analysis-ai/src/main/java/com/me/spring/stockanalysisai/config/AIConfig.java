@@ -11,9 +11,11 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.pinecone.PineconeVectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -64,10 +66,10 @@ public class AIConfig {
     }
 
     /**
-     * 配置向量存储
+     * 配置向量存储, 测试环境下使用SimpleVectorStore
      * 
      * @param embeddingModel 嵌入模型
-     * @return VectorStore实例
+     * @return VectorStore 实例
      */
     @Bean
     public VectorStore vectorStore(EmbeddingModel embeddingModel) {
@@ -83,5 +85,18 @@ public class AIConfig {
 
         return simpleVectorStore;
     }
+
+    /**
+     * 配置内存向量存储
+     * 使用 InMemoryVectorStore 作为向量存储实现
+     * 注意：生产环境建议使用持久化的向量数据库（如 Milvus、Weaviate、Pinecone 等）
+     */
+//    @Bean
+//    public VectorStore vectorStore(OpenAiEmbeddingModel embeddingModel){
+//        return PineconeVectorStore.builder(embeddingModel)
+//                .apiKey("<KEY>")
+//                .indexName("stock-analysis-ai")
+//                .build();
+//    }
 }
 

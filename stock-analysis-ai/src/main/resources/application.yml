@@ -16,6 +16,7 @@ spring:
         options:
           model: text-embedding-v3
           dimensions: 1024
+
   rabbitmq:
     host: localhost
     port: 5672
@@ -31,6 +32,24 @@ spring:
       simple:
         acknowledge-mode: manual # 手动确认ack
         prefetch: 1 # 限流，防止消费者负载过重
+        retry:
+          enabled: true # 开启重试
+          initial-interval: 1000 # 初始重试间隔
+          max-attempts: 3 # 最大重试次数
+          max-interval: 10000 # 最大重试间隔
+          multiplier: 2 # 重试间隔倍数
+    # 股票相关队列配置
+    stock:
+      vectorQueue: stock.vector.queue
+      rawDataQueue: stock.raw.data.queue
+      innerMarketQueue: innerMarketQueue
+      outerMarketQueue: stock.outer.market.queue
+      dataExchange: stock.data.exchange
+      stockExchange: stockExchange
+      vectorRoutingKey: stock.data.vector
+      rawDataRoutingKey: stock.data.raw
+      innerMarketRoutingKey: inner.market
+      outerMarketRoutingKey: stock.outer.market
 
 server:
   port: 8080

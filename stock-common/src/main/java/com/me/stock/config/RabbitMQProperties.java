@@ -79,24 +79,6 @@ public class RabbitMQProperties {
      */
     private String outerMarketRoutingKey = "stock.outer.market";
 
-    // ==================== 配置验证 ====================
-
-    /**
-     * 验证配置是否完整
-     * 可以在应用启动时调用此方法进行配置验证
-     */
-    public void validate() {
-        if (vectorQueue == null || vectorQueue.isEmpty()) {
-            throw new IllegalStateException("RabbitMQ vector queue 配置不能为空");
-        }
-        if (dataExchange == null || dataExchange.isEmpty()) {
-            throw new IllegalStateException("RabbitMQ data exchange 配置不能为空");
-        }
-        if (vectorRoutingKey == null || vectorRoutingKey.isEmpty()) {
-            throw new IllegalStateException("RabbitMQ vector routing key 配置不能为空");
-        }
-    }
-
     /**
      * 获取队列配置信息字符串（用于日志输出）
      */
