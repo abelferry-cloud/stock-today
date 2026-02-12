@@ -20,7 +20,6 @@ public class MqConfig {
     @Autowired
     private RabbitMQProperties rabbitMQProperties;
 
-    // ==================== 消息转换器 ====================
 
     /**
      * JSON消息转换器
@@ -40,8 +39,6 @@ public class MqConfig {
         rabbitTemplate.setMessageConverter(messageConverter());
         return rabbitTemplate;
     }
-
-    // ==================== 队列定义 ====================
 
     /**
      * 国内大盘信息队列

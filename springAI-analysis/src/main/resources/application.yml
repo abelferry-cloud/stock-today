@@ -1,6 +1,6 @@
 spring:
   application:
-    name: stock-analysis-ai
+    name: springai-demo
   ai:
     deepseek:
       api-key: sk-9091595d4dbf4f49b1ab4c31afc34aa0

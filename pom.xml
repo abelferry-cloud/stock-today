@@ -21,7 +21,7 @@
 
     <modules>
         <module>stock-common</module>
-        <module>stock-analysis-ai</module>
+        <module>springAI-analysis</module>
         <module>stock-crawler</module>
     </modules>
 
