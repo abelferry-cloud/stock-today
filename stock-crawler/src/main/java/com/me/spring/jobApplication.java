@@ -9,7 +9,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 @SpringBootApplication
 @MapperScan("com.me.stock.mapper")
-@EnableConfigurationProperties({TaskThreadPoolInfo.class, com.me.stock.config.RabbitMQProperties.class})
 public class jobApplication {
     public static void main(String[] args) {
         SpringApplication.run(jobApplication.class, args);

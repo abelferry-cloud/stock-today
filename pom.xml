@@ -30,10 +30,11 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.18.30</lombok.version>
+        <knife4j.version>4.4.0</knife4j.version>
         <mybatis-spring-boot.version>3.0.3</mybatis-spring-boot.version>
         <spring-ai.version>1.0.0</spring-ai.version>
         <xxl-job.version>2.4.0</xxl-job.version>
-        <!-- 公共依赖版本管理 -->
         <mybatis.version>3.5.16</mybatis.version>
         <guava.version>33.3.0-jre</guava.version>
         <commons-lang3.version>3.17.0</commons-lang3.version>
@@ -44,6 +45,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Lombok -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
             <!-- Spring AI BOM -->
             <dependency>
                 <groupId>org.springframework.ai</groupId>
@@ -109,11 +117,11 @@
                 <version>${mysql-connector.version}</version>
             </dependency>
 
-            <!-- Knife4j -->
+            <!-- Knife4j (OpenAPI 3) -->
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
                 <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-                <version>4.5.0</version>
+                <version>${knife4j.version}</version>
             </dependency>
 
             <!-- 内部模块依赖 -->
@@ -126,6 +134,12 @@
                 <groupId>com.stock</groupId>
                 <artifactId>stock-analysis-ai</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <!-- Message Queue: RabbitMQ -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-amqp</artifactId>
             </dependency>
         </dependencies>
     </dependencyManagement>
