@@ -57,14 +57,10 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     @Override
     public List<Document> loadAllDocuments() {
         try {
-            log.info("开始加载知识库文档");
-            
             List<Document> documents = new ArrayList<>();
             
             // 加载元数据
             List<KnowledgeMetadata> metadataList = loadMetadata();
-            log.info("加载到 {} 条元数据记录", metadataList.size());
-
             // 根据元数据加载每个文档
             for (KnowledgeMetadata metadata : metadataList) {
                 Document document = loadDocument(metadata);
@@ -72,7 +68,6 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                 log.debug("加载文档: {}", metadata.getTitle());
             }
 
-            log.info("知识库文档加载完成，总计加载 {} 个文档", documents.size());
             return documents;
 
         } catch (Exception e) {

@@ -58,10 +58,15 @@ public class MqConfig {
 
     /**
      * 股票向量数据队列（RAG 知识库）
+     * 必须与 stock-analysis-ai 模块的配置一致，包含死信队列参数
      */
     @Bean
     public Queue stockVectorQueue() {
-        return QueueBuilder.durable(rabbitMQProperties.getVectorQueue()).build();
+        return QueueBuilder
+                .durable(rabbitMQProperties.getVectorQueue())
+                .withArgument("x-dead-letter-exchange", "stock.data.dlx.exchange")
+                .withArgument("x-dead-letter-routing-key", "stock.data.dlq")
+                .build();
     }
 
     /**

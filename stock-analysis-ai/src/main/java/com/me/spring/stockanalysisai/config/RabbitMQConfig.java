@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -41,16 +42,12 @@ public class RabbitMQConfig {
     }
 
     /**
-     * 股票向量数据队列
-     * 用于接收来自 stock-crawler 的股票数据，用于 RAG 知识库向量处理
+     * 配置 RabbitAdmin
+     * 用于管理 RabbitMQ 交换机、队列和绑定
      */
     @Bean
-    public Queue stockVectorQueue() {
-        Queue queue = QueueBuilder
-                .durable(rabbitMQProperties.getVectorQueue())
-                .build();
-        log.info("RabbitMQ 队列初始化: {}", rabbitMQProperties.getVectorQueue());
-        return queue;
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
+        return new RabbitAdmin(connectionFactory);
     }
 
     /**
@@ -72,10 +69,10 @@ public class RabbitMQConfig {
      * 用于接收股票数据并更新 RAG 知识库
      */
     @Bean
-    public Binding bindingStockVectorQueue() {
+    public Binding bindingStockVectorQueue(Queue stockVectorQueueWithDlx, TopicExchange stockDataExchange) {
         Binding binding = BindingBuilder
-                .bind(stockVectorQueue())
-                .to(stockDataExchange())
+                .bind(stockVectorQueueWithDlx)
+                .to(stockDataExchange)
                 .with(rabbitMQProperties.getVectorRoutingKey());
         log.info("RabbitMQ 绑定初始化: 队列[{}] -> 交换机[{}] -> 路由键[{}]",
                 rabbitMQProperties.getVectorQueue(),

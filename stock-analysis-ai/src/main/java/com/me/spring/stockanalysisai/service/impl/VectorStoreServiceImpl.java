@@ -12,7 +12,7 @@ import java.util.Optional;
 
 /**
  * 向量存储服务实现类
- * 基于 Spring AI 的 VectorStore 实现
+ * 基于 Spring AI 的 VectorStore 实现 (Pinecone)
  */
 @Slf4j
 @Service
@@ -73,9 +73,8 @@ public class VectorStoreServiceImpl implements VectorStoreService {
     public boolean clearAllDocuments() {
         try {
             log.warn("开始清空向量存储中的所有文档");
-            // 注意：不是所有的 VectorStore 实现都支持删除所有文档
-            // 这里需要根据具体的 VectorStore 实现来处理
-            log.warn("清空向量存储功能需要根据具体 VectorStore 实现");
+            // 注意：Pinecone不支持直接清空所有文档，需要通过API删除
+            log.warn("清空向量存储功能需要通过Pinecone控制台操作");
             return false;
         } catch (Exception e) {
             log.error("清空向量存储失败: error={}", e.getMessage(), e);
@@ -86,9 +85,8 @@ public class VectorStoreServiceImpl implements VectorStoreService {
     @Override
     public int getDocumentCount() {
         try {
-            // 注意：不是所有的 VectorStore 实现都支持获取文档数量
-            // 这里需要根据具体的 VectorStore 实现来处理
-            log.warn("获取文档数量功能需要根据具体 VectorStore 实现");
+            // Pinecone不直接提供文档数量API，需要通过stats获取
+            log.warn("获取文档数量功能需要通过Pinecone控制台查看");
             return -1;
         } catch (Exception e) {
             log.error("获取文档数量失败: error={}", e.getMessage(), e);

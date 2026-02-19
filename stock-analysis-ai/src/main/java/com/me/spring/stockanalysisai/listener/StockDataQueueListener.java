@@ -3,10 +3,13 @@ package com.me.spring.stockanalysisai.listener;
 import com.me.spring.stockanalysisai.service.StockDataConsumer;
 import com.me.stock.pojo.dto.StockDataMessage;
 import com.rabbitmq.client.Channel;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.connection.Connection;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -21,6 +24,28 @@ import java.io.IOException;
 public class StockDataQueueListener {
 
     private final StockDataConsumer stockDataConsumer;
+    private final ConnectionFactory connectionFactory;
+
+    /**
+     * 初始化时检查 RabbitMQ 连接状态
+     */
+    @PostConstruct
+    public void init() {
+        try {
+            Connection connection = connectionFactory.createConnection();
+            boolean isOpen = connection.isOpen();
+            log.info("========== StockDataQueueListener 初始化 ==========");
+            log.info("RabbitMQ 连接状态: {}", isOpen ? "已连接" : "未连接");
+            log.info("RabbitMQ Host: {}", connectionFactory.getHost());
+            log.info("RabbitMQ Port: {}", connectionFactory.getPort());
+            log.info("RabbitMQ Virtual Host: {}", connectionFactory.getVirtualHost());
+            log.info("监听队列名称: stock.vector.queue");
+            log.info("StockDataConsumer 实例: {}", stockDataConsumer != null ? "已注入" : "未注入");
+            log.info("===============================================");
+        } catch (Exception e) {
+            log.error("StockDataQueueListener 初始化失败: {}", e.getMessage(), e);
+        }
+    }
 
     /**
      * 监听股票向量数据队列

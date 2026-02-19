@@ -2,19 +2,24 @@ package com.me.spring.stockanalysisai.controller;
 
 import com.me.spring.stockanalysisai.common.Result;
 import com.me.spring.stockanalysisai.common.ResultCode;
+import com.me.stock.config.RabbitMQProperties;
+import com.me.stock.pojo.dto.StockDataMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpAdmin;
+import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * 消息队列管理控制器
@@ -29,6 +34,7 @@ public class MQController {
 
     private final RabbitTemplate rabbitTemplate;
     private final RabbitAdmin rabbitAdmin;
+    private final RabbitMQProperties rabbitMQProperties;
 
     /**
      * 获取 RabbitMQ 连接状态
@@ -51,12 +57,12 @@ public class MQController {
             if (isConnected) {
                 return Result.success(status);
             } else {
-                return Result.error(ResultCode.SERVICE_UNAVAILABLE, "RabbitMQ连接失败");
+                return Result.error(ResultCode.SERVICE_UNAVAILABLE.getCode(), "RabbitMQ连接失败");
             }
 
         } catch (Exception e) {
             log.error("获取RabbitMQ状态失败: {}", e.getMessage(), e);
-            return Result.error(ResultCode.SERVICE_UNAVAILABLE, "RabbitMQ服务不可用: " + e.getMessage());
+            return Result.error(ResultCode.SERVICE_UNAVAILABLE.getCode(), "RabbitMQ服务不可用: " + e.getMessage());
         }
     }
 
@@ -70,16 +76,27 @@ public class MQController {
             Map<String, Object> queueInfo = new HashMap<>();
 
             // 添加向量队列信息
-            queueInfo.put("vectorQueue", "stock.vector.queue");
+            queueInfo.put("vectorQueue", rabbitMQProperties.getVectorQueue());
             queueInfo.put("dlxQueue", "stock.data.dlq");
-            queueInfo.put("exchange", "stock.data.exchange");
-            queueInfo.put("routingKey", "stock.data.vector");
+            queueInfo.put("exchange", rabbitMQProperties.getDataExchange());
+            queueInfo.put("routingKey", rabbitMQProperties.getVectorRoutingKey());
+
+            // 尝试获取队列属性
+            try {
+                java.util.Properties queueProps = rabbitAdmin.getQueueProperties(rabbitMQProperties.getVectorQueue());
+                // 将Properties转换为Map
+                Map<String, Object> propsMap = new HashMap<>();
+                queueProps.forEach((key, value) -> propsMap.put(String.valueOf(key), value));
+                queueInfo.put("queueProperties", propsMap);
+            } catch (Exception e) {
+                log.warn("获取队列属性失败: {}", e.getMessage());
+            }
 
             return Result.success(queueInfo);
 
         } catch (Exception e) {
             log.error("获取队列信息失败: {}", e.getMessage(), e);
-            return Result.error(ResultCode.INTERNAL_ERROR, "获取队列信息失败: " + e.getMessage());
+            return Result.error(ResultCode.INTERNAL_ERROR.getCode(), "获取队列信息失败: " + e.getMessage());
         }
     }
 
@@ -90,19 +107,31 @@ public class MQController {
     @Operation(summary = "测试消息发送", description = "发送测试消息到队列")
     public Result<String> testSendMessage() {
         try {
-            Map<String, Object> testMessage = Map.of(
-                    "type", "test",
-                    "message", "这是一条测试消息",
-                    "timestamp", System.currentTimeMillis()
+            StockDataMessage testMessage = StockDataMessage.builder()
+                    .messageId(UUID.randomUUID().toString())
+                    .stockCode("TEST001")
+                    .stockName("测试股票")
+                    .dataType("TEST")
+                    .title("测试消息")
+                    .content("这是一条测试消息，用于验证消息队列是否正常工作")
+                    .publishTime(LocalDateTime.now())
+                    .source("测试")
+                    .createTime(LocalDateTime.now())
+                    .build();
+
+            rabbitTemplate.convertAndSend(
+                    rabbitMQProperties.getDataExchange(),
+                    rabbitMQProperties.getVectorRoutingKey(),
+                    testMessage
             );
 
-            rabbitTemplate.convertAndSend("stock.data.exchange", "stock.data.vector", testMessage);
-
-            return Result.success("测试消息发送成功");
+            log.info("测试消息发送成功: messageId={}", testMessage.getMessageId());
+            return Result.success("测试消息发送成功, messageId: " + testMessage.getMessageId());
 
         } catch (Exception e) {
             log.error("发送测试消息失败: {}", e.getMessage(), e);
-            return Result.error(ResultCode.INTERNAL_ERROR, "发送测试消息失败: " + e.getMessage());
+            return Result.error(ResultCode.INTERNAL_ERROR.getCode(), "发送测试消息失败: " + e.getMessage());
         }
     }
 }
+

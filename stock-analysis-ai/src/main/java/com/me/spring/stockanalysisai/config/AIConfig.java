@@ -1,7 +1,6 @@
 package com.me.spring.stockanalysisai.config;
 
 import com.me.spring.stockanalysisai.common.Constants;
-import com.me.spring.stockanalysisai.service.KnowledgeBaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -9,17 +8,14 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.deepseek.DeepSeekChatModel;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.openai.OpenAiEmbeddingModel;
 import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.pinecone.PineconeVectorStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 
-import java.util.List;
+import java.nio.charset.StandardCharsets;
 
 /**
  * AI配置类
@@ -32,21 +28,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AIConfig {
 
-    private final KnowledgeBaseService knowledgeBaseService;
+    private final ResourceLoader resourceLoader;
 
     /**
      * 配置ChatClient
-     * 
+     *
      * @param chatModel 聊天模型
-     * @param vectorStore 向量存储
+     * @param vectorStore 向量存储 (Pinecone)
      * @return ChatClient实例
      */
     @Bean
     public ChatClient chatClient(DeepSeekChatModel chatModel, VectorStore vectorStore) {
-        String systemPrompt = knowledgeBaseService.loadSystemPrompt();
-        
-        log.info("系统提示词已加载....");
-        
+        String systemPrompt = loadSystemPrompt();
+
         return ChatClient.builder(chatModel)
                 .defaultSystem(systemPrompt)
                 .defaultAdvisors(
@@ -66,37 +60,53 @@ public class AIConfig {
     }
 
     /**
-     * 配置向量存储, 测试环境下使用SimpleVectorStore
-     * 
-     * @param embeddingModel 嵌入模型
-     * @return VectorStore 实例
+     * 加载系统提示词
      */
-    @Bean
-    public VectorStore vectorStore(EmbeddingModel embeddingModel) {
-        SimpleVectorStore simpleVectorStore = SimpleVectorStore.builder(embeddingModel).build();
+    private String loadSystemPrompt() {
+        try {
+            Resource systemPromptResource = resourceLoader.getResource(Constants.SYSTEM_PROMPT_PATH);
+            String systemPrompt = new String(
+                    systemPromptResource.getInputStream().readAllBytes(),
+                    StandardCharsets.UTF_8
+            );
 
-        // 从资源目录加载知识库文档
-        List<Document> knowledgeDocuments = knowledgeBaseService.loadAllDocuments();
+            return cleanMarkdownToText(systemPrompt);
 
-        // 将文档添加到向量存储
-        simpleVectorStore.add(knowledgeDocuments);
-
-        log.info("知识库初始化完成，已添加文档数量: {}", knowledgeDocuments.size());
-
-        return simpleVectorStore;
+        } catch (Exception e) {
+            log.error("加载系统提示词失败", e);
+            throw new RuntimeException("加载系统提示词失败", e);
+        }
     }
 
     /**
-     * 配置内存向量存储
-     * 使用 InMemoryVectorStore 作为向量存储实现
-     * 注意：生产环境建议使用持久化的向量数据库（如 Milvus、Weaviate、Pinecone 等）
+     * 清理Markdown格式，提取纯文本内容用于系统提示词
+     * 移除标题标记和格式符号，保留核心内容
      */
-//    @Bean
-//    public VectorStore vectorStore(OpenAiEmbeddingModel embeddingModel){
-//        return PineconeVectorStore.builder(embeddingModel)
-//                .apiKey("<KEY>")
-//                .indexName("stock-analysis-ai")
-//                .build();
-//    }
+    private String cleanMarkdownToText(String markdown) {
+        // 移除标题标记（##）
+        String text = markdown.replaceAll("(?m)^#{1,6}\\s+", "");
+
+        // 移除粗体标记（**）
+        text = text.replaceAll("\\*\\*", "");
+
+        // 移除斜体标记（*）
+        text = text.replaceAll("(?<!\\*)\\*(?!\\*)", "");
+
+        // 移除代码块标记（```）
+        text = text.replaceAll("```[a-z]*\\n?", "");
+        text = text.replaceAll("```", "");
+
+        // 移除分隔线（---）
+        text = text.replaceAll("---", "");
+
+        // 压缩多个空行为单个空行
+        text = text.replaceAll("\\n{3,}", "\n\n");
+
+        // 移除首尾空白
+        text = text.trim();
+
+        return text;
+    }
 }
+
 

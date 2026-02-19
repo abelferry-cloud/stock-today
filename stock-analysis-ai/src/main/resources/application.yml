@@ -3,7 +3,7 @@ spring:
     name: stock-analysis-ai
   ai:
     deepseek:
-      api-key: sk-9091595d4dbf4f49b1ab4c31afc34aa0
+      api-key: ${DEEPSEEK_API_KEY}
       chat:
         options:
           model: deepseek-chat
@@ -11,11 +11,17 @@ spring:
 
     openai: # 阿里云百炼平台兼容OpenAI，所以这里使用阿里云百炼平台地址
       base-url: https://dashscope.aliyuncs.com/compatible-mode
-      api-key: sk-67e26ed4c90b4d14b99e58664e6189d7
+      api-key: ${DASHSCOPE_API_KEY}
       embedding:
         options:
           model: text-embedding-v3
           dimensions: 1024
+
+    # Pinecone向量存储配置
+    vectorstore:
+      pinecone:
+        api-key: ${PINECONE_API_KEY}
+        index-name: stock-analysis-index
 
   rabbitmq:
     host: localhost

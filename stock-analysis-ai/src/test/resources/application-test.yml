@@ -3,12 +3,12 @@ spring:
   ai:
     vectorstore:
       pinecone:
-        api-key: ${PINECONE_API_KEY:pcsk_5C6WXW_5yDiVMryga55igtZoMjormqCCMaEvcJtQ1gLmMVtYCLLjgJ8SdCbbHHvrR6BfZq}
+        api-key: ${PINECONE_API_KEY:your-pinecone-api-key-here}
         index-name: stock-analysis-index
 
     openai:
       base-url: https://dashscope.aliyuncs.com/compatible-mode
-      api-key: ${DASHSCOPE_API_KEY:sk-67e26ed4c90b4d14b99e58664e6189d7}
+      api-key: ${DASHSCOPE_API_KEY:your-dashscope-api-key-here}
       embedding:
         options:
           model: text-embedding-v4

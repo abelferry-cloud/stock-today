@@ -64,7 +64,17 @@ public enum ResultCode {
     /**
      * 聊天上下文不存在
      */
-    CONVERSATION_NOT_FOUND(1003, "聊天上下文不存在");
+    CONVERSATION_NOT_FOUND(1003, "聊天上下文不存在"),
+
+    /**
+     * 服务不可用
+     */
+    SERVICE_UNAVAILABLE(503, "服务不可用"),
+
+    /**
+     * 内部服务器错误
+     */
+    INTERNAL_ERROR(500, "内部服务器错误");
 
     private final Integer code;
     private final String message;
