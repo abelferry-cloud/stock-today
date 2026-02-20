@@ -1,13 +1,13 @@
 package com.me.spring.stockanalysisai.config;
 
 import com.me.spring.stockanalysisai.common.Constants;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.deepseek.DeepSeekChatModel;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.context.annotation.Bean;
@@ -19,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * AI配置类
- * 
+ *
  * @author system
  * @since 1.0.0
  */
@@ -29,16 +29,28 @@ import java.nio.charset.StandardCharsets;
 public class AIConfig {
 
     private final ResourceLoader resourceLoader;
+    private final ApiKeyProperties apiKeyProperties;
+    private final ApiKeyManager apiKeyManager;
+
+    /**
+     * 初始化 ApiKeyManager
+     * Spring AI 会从 application.yml 读取 api-key 配置
+     */
+    @PostConstruct
+    public void initApiKeyManager() {
+        apiKeyManager.init(apiKeyProperties.getAllApiKeys());
+        log.info("ApiKeyManager initialized with keys: {}", apiKeyManager.getKeyStatusInfo());
+    }
 
     /**
      * 配置ChatClient
+     * 使用 Spring AI 自动配置的 DeepSeekChatModel
      *
-     * @param chatModel 聊天模型
      * @param vectorStore 向量存储 (Pinecone)
      * @return ChatClient实例
      */
     @Bean
-    public ChatClient chatClient(DeepSeekChatModel chatModel, VectorStore vectorStore) {
+    public ChatClient chatClient(org.springframework.ai.deepseek.DeepSeekChatModel chatModel, VectorStore vectorStore) {
         String systemPrompt = loadSystemPrompt();
 
         return ChatClient.builder(chatModel)

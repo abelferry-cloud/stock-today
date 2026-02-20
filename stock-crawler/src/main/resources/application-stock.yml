@@ -16,6 +16,18 @@ stock:
   # 板块URL
   blockURL: http://vip.stock.finance.sina.com.cn/q/view/newSinaHy.php
 
+# API Key配置（使用环境变量）
+api:
+  # DeepSeek API配置
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}
+  # 阿里云DashScope API配置
+  dashscope:
+    api-key: ${DASHSCOPE_API_KEY:}
+  # Pinecone向量数据库API配置
+  pinecone:
+    api-key: ${PINECONE_API_KEY:}
+
 # 定时任务线程池基础参数
 task:
   pool:
