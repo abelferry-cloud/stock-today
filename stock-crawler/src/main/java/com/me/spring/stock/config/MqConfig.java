@@ -1,6 +1,10 @@
 package com.me.spring.stock.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.me.stock.config.RabbitMQProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -14,6 +18,7 @@ import org.springframework.context.annotation.Configuration;
  * MQ配置类
  * 统一配置所有 RabbitMQ 队列、交换机和绑定关系
  */
+@Slf4j
 @Configuration
 public class MqConfig {
 
@@ -24,10 +29,20 @@ public class MqConfig {
     /**
      * JSON消息转换器
      * 使用 Jackson 进行消息序列化和反序列化
+     * 配置 JavaTimeModule 支持 Java 8 LocalDateTime
      */
     @Bean
     public MessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
+        // 配置 ObjectMapper 以支持 Java 8 时间类型
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        // 禁用将日期写为时间戳
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter(objectMapper);
+
+        log.info("RabbitMQ 消息转换器初始化: 启用 JavaTimeModule 支持 LocalDateTime");
+        return converter;
     }
 
     /**

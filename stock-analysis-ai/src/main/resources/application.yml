@@ -1,6 +1,22 @@
 spring:
   application:
     name: stock-analysis-ai
+  rabbitmq:
+    host: ${RABBITMQ_HOST:172.23.70.33}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:jovan}
+    password: ${RABBITMQ_PASSWORD:123456}
+    virtual-host: /stock-today
+    # 开启确认模式机制（生产端）
+    publisher-confirm-type: CORRELATED
+    publisher-returns: true
+    template:
+      mandatory: true
+    # 消费端配置
+    listener:
+      simple:
+        acknowledge-mode: auto
+        prefetch: 10
   ai:
     deepseek:
       # 多个 API Key 配置（数组格式）- 支持负载均衡和 429 自动冷却
@@ -31,39 +47,6 @@ spring:
         api-key: pcsk_3H9pHS_E5Y2zhQCrm7r5YuhkQY5M7eZeXqWYLTbaY1Uo4GoyvuXd9Mb6Sui6iiMSFvmdR4
         index-name: stock-analysis-index
 
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: jovan
-    password: 123456
-    # 开启确认模式机制（生产端）
-    publisher-confirm-type: CORRELATED # 异步回调
-    publisher-returns: true # 消息路由失败回调
-    template:
-      mandatory: true # 强制回调
-    # 开启确认模式机制（消费端）
-    listener:
-      simple:
-        acknowledge-mode: manual # 手动确认ack
-        prefetch: 1 # 限流，防止消费者负载过重
-        retry:
-          enabled: true # 开启重试
-          initial-interval: 1000 # 初始重试间隔
-          max-attempts: 3 # 最大重试次数
-          max-interval: 10000 # 最大重试间隔
-          multiplier: 2 # 重试间隔倍数
-    # 股票相关队列配置
-    stock:
-      vectorQueue: stock.vector.queue
-      rawDataQueue: stock.raw.data.queue
-      innerMarketQueue: innerMarketQueue
-      outerMarketQueue: stock.outer.market.queue
-      dataExchange: stock.data.exchange
-      stockExchange: stockExchange
-      vectorRoutingKey: stock.data.vector
-      rawDataRoutingKey: stock.data.raw
-      innerMarketRoutingKey: inner.market
-      outerMarketRoutingKey: stock.outer.market
 
 server:
   port: 8080
@@ -84,3 +67,13 @@ knife4j:
     language: zh_cn
     swagger-model-name: 实体类列表
   production: false
+
+# 自定义RabbitMQ配置
+stock:
+  rabbitmq:
+    vector-queue: stock.vector.queue
+    data-exchange: stock.data.exchange
+    vector-routing-key: stock.data.vector
+    dlx-exchange: stock.data.dlx.exchange
+    dlx-routing-key: stock.data.dlx
+    dlq-queue: stock.vector.dlq

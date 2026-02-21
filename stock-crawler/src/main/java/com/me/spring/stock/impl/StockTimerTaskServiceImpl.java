@@ -488,7 +488,7 @@ public class StockTimerTaskServiceImpl implements StockTimerTaskService {
                     message
             );
 
-            log.debug("成功发送股票数据到向量队列: stockCode={}, dataType={}, messageId={}",
+            log.info("成功发送股票数据到向量队列: stockCode={}, dataType={}, messageId={}",
                     stockCode, dataType, message.getMessageId());
 
         } catch (Exception e) {

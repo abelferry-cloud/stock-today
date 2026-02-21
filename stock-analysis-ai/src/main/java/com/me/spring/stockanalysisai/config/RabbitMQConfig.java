@@ -1,83 +1,105 @@
 package com.me.spring.stockanalysisai.config;
 
-import com.me.stock.config.RabbitMQProperties;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * RabbitMQ 配置类
- * 用于消费来自 stock-crawler 的股票数据消息
+ * 声明队列、交换机、绑定关系
  */
-@Slf4j
 @Configuration
-@RequiredArgsConstructor
 public class RabbitMQConfig {
 
-    private final RabbitMQProperties rabbitMQProperties;
+    @Value("${stock.rabbitmq.vector-queue:stock.vector.queue}")
+    private String vectorQueue;
+
+    @Value("${stock.rabbitmq.data-exchange:stock.data.exchange}")
+    private String dataExchange;
+
+    @Value("${stock.rabbitmq.vector-routing-key:stock.data.vector}")
+    private String vectorRoutingKey;
+
+    @Value("${stock.rabbitmq.dlx-exchange:stock.data.dlx.exchange}")
+    private String dlxExchange;
+
+    @Value("${stock.rabbitmq.dlx-routing-key:stock.data.dlx}")
+    private String dlxRoutingKey;
+
+    @Value("${stock.rabbitmq.dlq-queue:stock.vector.dlq}")
+    private String dlqQueue;
 
     /**
-     * JSON 消息转换器
+     * 声明向量数据队列（支持死信队列）
      */
     @Bean
-    public MessageConverter messageConverter() {
+    public Queue vectorQueue() {
+        return QueueBuilder.durable(vectorQueue)
+                .withArgument("x-dead-letter-exchange", dlxExchange)
+                .withArgument("x-dead-letter-routing-key", dlxRoutingKey)
+                .build();
+    }
+
+    /**
+     * 声明死信交换机（Direct类型）
+     */
+    @Bean
+    public Exchange dlxExchange() {
+        return ExchangeBuilder.directExchange(dlxExchange).durable(true).build();
+    }
+
+    /**
+     * 声明死信队列
+     */
+    @Bean
+    public Queue dlqQueue() {
+        return QueueBuilder.durable(dlqQueue).build();
+    }
+
+    /**
+     * 声明死信队列与死信交换机的绑定
+     */
+    @Bean
+    public Binding dlqBinding(Queue dlqQueue, Exchange dlxExchange) {
+        return BindingBuilder.bind(dlqQueue).to(dlxExchange).with(dlxRoutingKey).noargs();
+    }
+
+    /**
+     * 声明数据交换机（Topic类型）
+     */
+    @Bean
+    public Exchange dataExchange() {
+        return ExchangeBuilder.topicExchange(dataExchange).durable(true).build();
+    }
+
+    /**
+     * 声明向量数据队列与交换机的绑定
+     */
+    @Bean
+    public Binding vectorBinding(Queue vectorQueue, Exchange dataExchange) {
+        return BindingBuilder.bind(vectorQueue).to(dataExchange).with(vectorRoutingKey).noargs();
+    }
+
+    /**
+     * 配置 JSON 消息转换器
+     */
+    @Bean
+    public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
     /**
-     * 配置 RabbitTemplate
+     * 配置 RabbitTemplate 使用 JSON 消息转换器
      */
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        rabbitTemplate.setMessageConverter(messageConverter());
+        rabbitTemplate.setMessageConverter(jsonMessageConverter());
         return rabbitTemplate;
-    }
-
-    /**
-     * 配置 RabbitAdmin
-     * 用于管理 RabbitMQ 交换机、队列和绑定
-     */
-    @Bean
-    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
-        return new RabbitAdmin(connectionFactory);
-    }
-
-    /**
-     * 股票数据主交换机（Topic 类型）
-     */
-    @Bean
-    public TopicExchange stockDataExchange() {
-        TopicExchange exchange = new TopicExchange(
-                rabbitMQProperties.getDataExchange(),
-                true,  // durable
-                false  // autoDelete
-        );
-        log.info("RabbitMQ 交换机初始化: {}", rabbitMQProperties.getDataExchange());
-        return exchange;
-    }
-
-    /**
-     * 绑定：向量数据队列 -> 数据主交换机
-     * 用于接收股票数据并更新 RAG 知识库
-     */
-    @Bean
-    public Binding bindingStockVectorQueue(Queue stockVectorQueueWithDlx, TopicExchange stockDataExchange) {
-        Binding binding = BindingBuilder
-                .bind(stockVectorQueueWithDlx)
-                .to(stockDataExchange)
-                .with(rabbitMQProperties.getVectorRoutingKey());
-        log.info("RabbitMQ 绑定初始化: 队列[{}] -> 交换机[{}] -> 路由键[{}]",
-                rabbitMQProperties.getVectorQueue(),
-                rabbitMQProperties.getDataExchange(),
-                rabbitMQProperties.getVectorRoutingKey());
-        return binding;
     }
 }
