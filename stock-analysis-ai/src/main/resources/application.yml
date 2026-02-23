@@ -1,6 +1,8 @@
 spring:
   application:
     name: stock-analysis-ai
+  profiles:
+    active: db,cache,canal
   rabbitmq:
     host: ${RABBITMQ_HOST:172.23.70.33}
     port: ${RABBITMQ_PORT:5672}

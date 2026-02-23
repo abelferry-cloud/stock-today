@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,7 +59,13 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     public List<Document> loadAllDocuments() {
         try {
             List<Document> documents = new ArrayList<>();
-            
+
+            // 检查知识库目录是否有文件
+            if (!hasKnowledgeFiles()) {
+                log.info("知识库目录为空，跳过加载静态文档");
+                return documents;
+            }
+
             // 加载元数据
             List<KnowledgeMetadata> metadataList = loadMetadata();
             // 根据元数据加载每个文档
@@ -80,29 +87,36 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     public KnowledgeBaseStatusVO getKnowledgeBaseStatus() {
         try {
             log.info("获取知识库状态信息");
-            
-            // 加载元数据
-            List<KnowledgeMetadata> metadataList = loadMetadata();
-            
+
             // 加载系统提示词
             String systemPrompt = loadSystemPrompt();
-            
-            // 构建文档信息列表
-            List<KnowledgeBaseStatusVO.DocumentInfo> documentInfos = metadataList.stream()
-                    .map(metadata -> KnowledgeBaseStatusVO.DocumentInfo.builder()
-                            .filename(metadata.getFilename())
-                            .title(metadata.getTitle())
-                            .category(metadata.getCategory())
-                            .keywords(metadata.getKeywords())
-                            .build())
-                    .collect(Collectors.toList());
+
+            // 检查知识库目录是否有文件
+            List<KnowledgeMetadata> metadataList;
+            List<KnowledgeBaseStatusVO.DocumentInfo> documentInfos;
+
+            if (hasKnowledgeFiles()) {
+                metadataList = loadMetadata();
+                documentInfos = metadataList.stream()
+                        .map(metadata -> KnowledgeBaseStatusVO.DocumentInfo.builder()
+                                .filename(metadata.getFilename())
+                                .title(metadata.getTitle())
+                                .category(metadata.getCategory())
+                                .keywords(metadata.getKeywords())
+                                .build())
+                        .collect(Collectors.toList());
+            } else {
+                metadataList = Collections.emptyList();
+                documentInfos = Collections.emptyList();
+                log.info("知识库目录为空");
+            }
 
             return KnowledgeBaseStatusVO.builder()
                     .documentCount(metadataList.size())
                     .systemPromptLength(systemPrompt.length())
                     .documents(documentInfos)
                     .build();
-                    
+
         } catch (Exception e) {
             log.error("获取知识库状态失败", e);
             throw new RuntimeException("获取知识库状态失败", e);
@@ -153,6 +167,14 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                     documents.size(), e.getMessage(), e);
             return 0;
         }
+    }
+
+    /**
+     * 检查知识库目录是否有文件
+     */
+    private boolean hasKnowledgeFiles() {
+        Resource metadataResource = resourceLoader.getResource(Constants.METADATA_PATH);
+        return metadataResource.exists();
     }
 
     /**

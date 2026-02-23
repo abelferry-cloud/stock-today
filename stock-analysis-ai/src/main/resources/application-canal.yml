@@ -1,0 +1,15 @@
+canal:
+  server:
+    host: 172.23.70.33
+    port: 11111
+  destination: example
+  username: canal
+  password: canal
+
+# 缓存失效队列配置
+stock:
+  cache:
+    invalid:
+      queue: stock.cache.invalid.queue
+      exchange: stock.cache.invalid.exchange
+      routing-key: cache.invalid

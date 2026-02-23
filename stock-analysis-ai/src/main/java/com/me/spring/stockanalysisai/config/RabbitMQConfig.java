@@ -34,6 +34,16 @@ public class RabbitMQConfig {
     @Value("${stock.rabbitmq.dlq-queue:stock.vector.dlq}")
     private String dlqQueue;
 
+    // 缓存失效队列配置
+    @Value("${stock.cache.invalid.queue:stock.cache.invalid.queue}")
+    private String cacheInvalidQueue;
+
+    @Value("${stock.cache.invalid.exchange:stock.cache.invalid.exchange}")
+    private String cacheInvalidExchange;
+
+    @Value("${stock.cache.invalid.routing-key:cache.invalid}")
+    private String cacheInvalidRoutingKey;
+
     /**
      * 声明向量数据队列（支持死信队列）
      */
@@ -83,6 +93,30 @@ public class RabbitMQConfig {
     @Bean
     public Binding vectorBinding(Queue vectorQueue, Exchange dataExchange) {
         return BindingBuilder.bind(vectorQueue).to(dataExchange).with(vectorRoutingKey).noargs();
+    }
+
+    /**
+     * 声明缓存失效队列
+     */
+    @Bean
+    public Queue cacheInvalidQueue() {
+        return QueueBuilder.durable(cacheInvalidQueue).build();
+    }
+
+    /**
+     * 声明缓存失效交换机（Direct类型）
+     */
+    @Bean
+    public Exchange cacheInvalidExchange() {
+        return ExchangeBuilder.directExchange(cacheInvalidExchange).durable(true).build();
+    }
+
+    /**
+     * 声明缓存失效队列与交换机的绑定
+     */
+    @Bean
+    public Binding cacheInvalidBinding(Queue cacheInvalidQueue, Exchange cacheInvalidExchange) {
+        return BindingBuilder.bind(cacheInvalidQueue).to(cacheInvalidExchange).with(cacheInvalidRoutingKey).noargs();
     }
 
     /**
