@@ -32,10 +32,13 @@ public class VectorStoreInitializer implements ApplicationRunner {
             // 从资源目录加载知识库文档
             List<Document> knowledgeDocuments = knowledgeBaseService.loadAllDocuments();
 
-            // 将文档添加到Pinecone向量存储
-            vectorStore.add(knowledgeDocuments);
-
-            log.info("知识库初始化完成，已添加文档数量: {}", knowledgeDocuments.size());
+            if (knowledgeDocuments.isEmpty()) {
+                log.info("知识库目录为空，跳过静态文档加载");
+            } else {
+                // 将文档添加到Pinecone向量存储
+                vectorStore.add(knowledgeDocuments);
+                log.info("知识库初始化完成，已添加文档数量: {}", knowledgeDocuments.size());
+            }
 
         } catch (Exception e) {
             log.error("向量存储初始化失败", e);
