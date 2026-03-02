@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 /**
  * 聊天响应VO
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Data

@@ -210,7 +210,9 @@
                sri.cur_time as date
         from stock_rt_info as sri
         where stock_code = #{code}
-          and cur_time = #{timePoint}
+          and DATE(cur_time) = DATE(#{timePoint})
+        order by cur_time DESC
+        LIMIT 1
     </select>
     <select id="getScreenSecond" resultType="com.me.stock.pojo.domain.Stock4MinuteDomain">
         select sri.trade_amount as tradeAmt,

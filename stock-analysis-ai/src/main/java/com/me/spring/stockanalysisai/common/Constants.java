@@ -3,7 +3,7 @@ package com.me.spring.stockanalysisai.common;
 /**
  * 全局常量定义类
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 public final class Constants {

@@ -1,0 +1,17 @@
+# Git Filter Configuration
+# clean: 在 git add 时将真实 Key 替换为占位符
+# smudge: 在 git checkout 时从 secrets.env 还原真实 Key
+
+# stock-analysis-ai 配置文件
+stock-analysis-ai/src/main/resources/application.yml            filter=stocksecrets
+stock-analysis-ai/src/main/resources/application-db.yml         filter=stocksecrets
+stock-analysis-ai/src/main/resources/application-canal.yml      filter=stocksecrets
+stock-analysis-ai/src/main/resources/application-cache.yml      filter=stocksecrets
+
+# stock-crawler 配置文件
+stock-crawler/src/main/resources/application-mq.yml             filter=stocksecrets
+stock-crawler/src/main/resources/application-stock.yml          filter=stocksecrets
+stock-crawler/src/main/resources/application-xxljob.yml         filter=stocksecrets
+
+# stock-common 配置文件（如果有敏感信息）
+stock-common/src/main/resources/application*.yml                filter=stocksecrets

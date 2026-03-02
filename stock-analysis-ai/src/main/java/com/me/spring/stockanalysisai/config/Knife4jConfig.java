@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  * Knife4j配置类
  * 用于配置API文档的展示信息
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Configuration

@@ -3,7 +3,7 @@ package com.me.spring.stockanalysisai.util;
 /**
  * 字符串工具类
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 public final class StringUtils {

@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * 股票数据查询服务接口
  *
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 public interface StockDataService {

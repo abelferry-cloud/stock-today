@@ -2,8 +2,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://172.23.70.33:3306/stock_analysis?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: 123456
-    password: 123456
+    username: YOUR_DB_USERNAME
+    password: YOUR_RABBITMQ_PASSWORD
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20

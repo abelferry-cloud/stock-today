@@ -57,6 +57,8 @@ project_introduce.md
 # Private files and sensitive data
 *.env
 .env
+!scripts/secrets.env.template
+scripts/secrets.env
 *.key
 *.pem
 credentials.json

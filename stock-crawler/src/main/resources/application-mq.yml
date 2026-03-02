@@ -3,7 +3,7 @@ spring:
     host: 172.23.70.33 # rabbitMQ的ip地址
     port: 5672 # 端口
     username: jovan
-    password: 123456
+    password: YOUR_RABBITMQ_PASSWORD
     virtual-host: /stock-today
     # RabbitMQ 队列配置（可选，使用 RabbitMQProperties 类的默认值）
     stock:

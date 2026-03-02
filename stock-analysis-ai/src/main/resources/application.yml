@@ -23,12 +23,12 @@ spring:
     deepseek:
       # 多个 API Key 配置（数组格式）- 支持负载均衡和 429 自动冷却
       api-keys:
-        - sk-9091595d4dbf4f49b1ab4c31afc34aa0
-        - sk-adc25cfc02cb4744a77afbce97f3a244
-        - sk-3d7e2f405ba14477974dfe5a3d241d53
+        - YOUR_DEEPSEEK_API_KEY_1
+        - YOUR_DEEPSEEK_API_KEY_2
+        - YOUR_DEEPSEEK_API_KEY_3
       # 单个 API Key（供 Spring AI 自动配置使用，取 api-keys 的第一个）
       # Spring AI 3.x 版本的 DeepSeek starter 需要此配置来创建 Bean
-      api-key: sk-9091595d4dbf4f49b1ab4c31afc34aa0
+      api-key: YOUR_DEEPSEEK_API_KEY_1
       base-url: https://api.deepseek.com
       chat:
         options:
@@ -37,7 +37,7 @@ spring:
 
     openai: # 阿里云百炼平台兼容OpenAI，所以这里使用阿里云百炼平台地址
       base-url: https://dashscope.aliyuncs.com/compatible-mode
-      api-key: sk-67e26ed4c90b4d14b99e58664e6189d7
+      api-key: YOUR_ALIYUN_DASHSCOPE_API_KEY
       embedding:
         options:
           model: text-embedding-v3
@@ -46,7 +46,7 @@ spring:
     # Pinecone向量存储配置
     vectorstore:
       pinecone:
-        api-key: pcsk_3H9pHS_E5Y2zhQCrm7r5YuhkQY5M7eZeXqWYLTbaY1Uo4GoyvuXd9Mb6Sui6iiMSFvmdR4
+        api-key: YOUR_PINECONE_API_KEY
         index-name: stock-analysis-index
 
 
@@ -79,3 +79,13 @@ stock:
     dlx-exchange: stock.data.dlx.exchange
     dlx-routing-key: stock.data.dlx
     dlq-queue: stock.vector.dlq
+
+  # 限流器配置（Resilience4j RateLimiter）
+  ratelimiter:
+    enabled: true
+    # 令牌桶容量（允许的最大突发请求数）
+    limit-for-period: 5
+    # 令牌刷新周期（每秒补充一次令牌）
+    limit-refresh-period: 1s
+    # 获取令牌的超时时间
+    timeout-duration: 3s

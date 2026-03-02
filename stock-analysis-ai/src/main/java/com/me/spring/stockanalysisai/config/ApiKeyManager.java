@@ -1,20 +1,29 @@
 package com.me.spring.stockanalysisai.config;
 
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * API Key 管理器
  * 支持多个 API Key 的负载均衡和 429 自动冷却
+ * 集成 Resilience4j RateLimiter 进行主动限流
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ApiKeyManager {
+
+    private final RateLimiterRegistry rateLimiterRegistry;
+    private final RateLimiterProperties rateLimiterProperties;
 
     /**
      * 初始冷却时间（毫秒）
@@ -47,6 +56,11 @@ public class ApiKeyManager {
     private final ConcurrentHashMap<String, KeyStatus> keyStatusMap = new ConcurrentHashMap<>();
 
     /**
+     * 每个 API Key 独立的 RateLimiter
+     */
+    private final ConcurrentHashMap<String, RateLimiter> rateLimiterMap = new ConcurrentHashMap<>();
+
+    /**
      * API Key 状态，包含冷却信息和退避次数
      */
     @Data
@@ -66,6 +80,7 @@ public class ApiKeyManager {
 
     /**
      * 初始化 API Keys
+     * 为每个 Key 创建独立的 RateLimiter
      */
     public void init(List<String> keys) {
         if (keys == null || keys.isEmpty()) {
@@ -74,11 +89,21 @@ public class ApiKeyManager {
         this.apiKeys = keys;
         this.currentIndex.set(0);
         this.keyStatusMap.clear();
+        this.rateLimiterMap.clear();
+
+        // 为每个 API Key 创建独立的 RateLimiter
+        for (String key : keys) {
+            RateLimiter rateLimiter = rateLimiterProperties.getRateLimiter(rateLimiterRegistry, key);
+            rateLimiterMap.put(key, rateLimiter);
+            log.debug("Created RateLimiter for API key: {}", maskKey(key));
+        }
+
         log.info("ApiKeyManager initialized with {} API keys", keys.size());
     }
 
     /**
      * 获取下一个可用的 API Key（Round Robin）
+     * 同时获取限流许可，如果限流则抛出异常
      */
     public synchronized String getNextKey() {
         if (apiKeys == null || apiKeys.isEmpty()) {
@@ -108,6 +133,42 @@ public class ApiKeyManager {
         }
         log.warn("All API keys are cooling, returning earliest expiring key");
         return earliestKey;
+    }
+
+    /**
+     * 获取 API Key 并申请限流许可
+     * @return 可用的 API Key
+     * @throws io.github.resilience4j.ratelimiter.RequestNotPermitted 如果限流
+     */
+    public String acquirePermissionAndGetKey() {
+        String key = getNextKey();
+        acquirePermission(key);
+        return key;
+    }
+
+    /**
+     * 为指定 API Key 获取限流许可
+     * 在请求发送前调用，主动预防 429 错误
+     *
+     * @param apiKey API Key
+     * @throws io.github.resilience4j.ratelimiter.RequestNotPermitted 如果限流
+     */
+    public void acquirePermission(String apiKey) {
+        if (!rateLimiterProperties.isEnabled()) {
+            log.debug("Rate limiter is disabled, skipping permission check");
+            return;
+        }
+
+        RateLimiter rateLimiter = rateLimiterMap.get(apiKey);
+        if (rateLimiter == null) {
+            log.warn("RateLimiter not found for API key: {}, skipping permission check", maskKey(apiKey));
+            return;
+        }
+
+        // 尝试获取令牌，如果获取失败会抛出 RequestNotPermitted 异常
+        if (!rateLimiter.acquirePermission(1)) {
+            log.warn("Rate limit exceeded for API key: {}", maskKey(apiKey));
+        }
     }
 
     /**
@@ -193,9 +254,28 @@ public class ApiKeyManager {
     }
 
     /**
+     * 获取限流器状态信息（用于监控）
+     */
+    public String getRateLimiterStatusInfo() {
+        StringBuilder sb = new StringBuilder();
+        if (apiKeys != null) {
+            for (String key : apiKeys) {
+                RateLimiter rateLimiter = rateLimiterMap.get(key);
+                if (rateLimiter != null) {
+                    sb.append(maskKey(key))
+                            .append(": OK; ");
+                } else {
+                    sb.append(maskKey(key)).append(": N/A; ");
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
      * 脱敏显示 API Key
      */
-    private String maskKey(String apiKey) {
+    public String maskKey(String apiKey) {
         if (apiKey == null || apiKey.length() < 8) {
             return "***";
         }

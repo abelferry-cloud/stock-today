@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 /**
  * 知识库服务实现类
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Slf4j

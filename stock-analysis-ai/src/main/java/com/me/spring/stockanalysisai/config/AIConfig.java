@@ -1,5 +1,7 @@
 package com.me.spring.stockanalysisai.config;
 
+import com.me.spring.stockanalysisai.Tools.DateTimeTools;
+import com.me.spring.stockanalysisai.Tools.StockQueryTool;
 import com.me.spring.stockanalysisai.common.Constants;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * AI配置类
  *
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Slf4j
@@ -43,15 +45,22 @@ public class AIConfig {
     }
 
     /**
-     * 配置ChatClient
+     * 配置 ChatClient
      * 使用 Spring AI 自动配置的 DeepSeekChatModel
      *
+     * @param chatModel DeepSeek 聊天模型
      * @param vectorStore 向量存储 (Pinecone)
-     * @return ChatClient实例
+     * @param stockQueryTool 股票查询工具
+     * @param dateTimeTools 日期时间工具
+     * @return ChatClient 实例
      */
     @Bean
-    public ChatClient chatClient(org.springframework.ai.deepseek.DeepSeekChatModel chatModel, VectorStore vectorStore) {
+    public ChatClient chatClient(org.springframework.ai.deepseek.DeepSeekChatModel chatModel, VectorStore vectorStore, StockQueryTool stockQueryTool, DateTimeTools dateTimeTools) {
         String systemPrompt = loadSystemPrompt();
+
+        log.info("注册 AI 工具：StockQueryTool={}, DateTimeTools={}",
+                stockQueryTool != null ? "已注入" : "未注入",
+                dateTimeTools != null ? "已注入" : "未注入");
 
         return ChatClient.builder(chatModel)
                 .defaultSystem(systemPrompt)
@@ -68,6 +77,7 @@ public class AIConfig {
                                         .build())
                                 .build()
                 )
+                .defaultTools(stockQueryTool, dateTimeTools)
                 .build();
     }
 

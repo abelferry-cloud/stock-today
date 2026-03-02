@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
-* @author 周俊远
+* @author Jovan
 * @description 针对表【stock_block_rt_info(股票板块详情信息表)】的数据库操作Mapper
 * @createDate 2025-09-12 17:25:42
 * @Entity com.me.stock.pojo.entity.StockBlockRtInfo

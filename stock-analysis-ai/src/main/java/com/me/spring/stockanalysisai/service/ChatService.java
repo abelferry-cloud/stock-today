@@ -7,7 +7,7 @@ import reactor.core.publisher.Flux;
 /**
  * 聊天服务接口
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 public interface ChatService {

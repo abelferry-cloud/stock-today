@@ -15,7 +15,7 @@ import java.util.List;
  * 向量存储初始化器
  * 在应用启动后初始化知识库文档到Pinecone
  *
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Slf4j

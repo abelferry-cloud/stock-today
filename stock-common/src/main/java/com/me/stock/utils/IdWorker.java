@@ -7,7 +7,7 @@ import java.net.NetworkInterface;
 /**
  * 分布式自增长ID实现，底层基于Twitter的Snowflake
  * 64位ID (42(时间戳)+5(机房ID)+5(机器ID)+12(序列号-同毫秒内重复累加)
- * @author itheima
+ * @author Jovan
  */
 public class IdWorker {
     // 时间起始标记点，作为基准，一般取系统的最近时间（一旦确定不能变动）

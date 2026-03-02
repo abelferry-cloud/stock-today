@@ -9,7 +9,7 @@ import javax.validation.constraints.Size;
 /**
  * 聊天请求DTO
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Data

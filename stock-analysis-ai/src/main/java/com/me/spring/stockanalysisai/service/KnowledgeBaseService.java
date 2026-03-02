@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * 知识库服务接口
  *
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 public interface KnowledgeBaseService {

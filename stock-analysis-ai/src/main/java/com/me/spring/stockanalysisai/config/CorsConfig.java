@@ -10,7 +10,7 @@ import org.springframework.web.filter.CorsFilter;
  * CORS跨域配置类
  * 用于配置允许跨域请求的相关参数
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Configuration

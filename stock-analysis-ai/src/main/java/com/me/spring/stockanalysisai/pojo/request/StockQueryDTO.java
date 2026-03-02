@@ -11,7 +11,7 @@ import java.time.LocalDate;
 /**
  * 股票查询DTO
  *
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Data

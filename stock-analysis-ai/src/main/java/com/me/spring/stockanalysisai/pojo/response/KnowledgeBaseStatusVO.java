@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 知识库状态VO
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Data

@@ -17,7 +17,7 @@ import javax.validation.Valid;
 /**
  * 聊天接口控制器
  * 
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Slf4j

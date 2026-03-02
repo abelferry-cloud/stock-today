@@ -76,6 +76,19 @@
             <version>1.1.7</version>
         </dependency>
 
+        <!-- Google Protobuf - 解决 Spring AI 和 Canal 的依赖冲突 -->
+        <!-- pinecone-client 需要 protobuf 4.x，RuntimeVersion 类在 4.x 中引入 -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>4.29.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>4.29.3</version>
+        </dependency>
+
         <!-- MySQL -->
         <dependency>
             <groupId>com.mysql</groupId>
@@ -109,6 +122,22 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-vector-store-pinecone</artifactId>
+        </dependency>
+
+        <!-- Resilience4j Rate Limiter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-ratelimiter</artifactId>
+            <version>2.2.0</version>
         </dependency>
 
     </dependencies>

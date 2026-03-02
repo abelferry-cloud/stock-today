@@ -13,7 +13,7 @@ import java.util.Date;
 /**
  * 股票K线数据响应VO
  *
- * @author system
+ * @author Jovan
  * @since 1.0.0
  */
 @Data

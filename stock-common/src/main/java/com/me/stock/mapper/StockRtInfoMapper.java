@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
-* @author 周俊远
+* @author Jovan
 * @description 针对表【stock_rt_info(个股详情信息表)】的数据库操作Mapper
 * @createDate 2025-09-12 17:25:42
 * @Entity com.me.stock.pojo.entity.StockRtInfo
