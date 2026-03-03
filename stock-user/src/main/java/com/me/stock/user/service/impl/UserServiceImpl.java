@@ -1,12 +1,16 @@
 package com.me.stock.user.service.impl;
 
 import com.me.stock.mapper.SysUserMapper;
+import com.me.stock.pojo.domain.SysUserDomain;
 import com.me.stock.pojo.entity.SysUser;
+import com.me.stock.pojo.vo.UserMConditionReqVO;
 import com.me.stock.user.common.ResultCode;
 import com.me.stock.user.config.JwtProperties;
 import com.me.stock.user.dto.request.RegisterRequest;
+import com.me.stock.user.dto.request.UserInfoRequest;
 import com.me.stock.user.dto.response.LoginResponse;
 import com.me.stock.user.security.JwtTokenProvider;
+import com.me.stock.user.service.LoginLogService;
 import com.me.stock.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
     private final RedisTemplate<String, String> redisTemplate;
+    private final LoginLogService loginLogService;
 
     /**
      * Token 黑名单 Key 前缀
@@ -52,18 +57,24 @@ public class UserServiceImpl implements UserService {
         SysUser user = sysUserMapper.findByUserName(username);
         if (user == null) {
             log.warn("用户不存在：{}", username);
+            // 记录登录失败日志
+            loginLogService.recordLoginLog(null, username, 0, "用户不存在");
             throw new RuntimeException("用户名或密码错误");
         }
 
         // 校验密码
         if (!passwordEncoder.matches(password, user.getPassword())) {
             log.warn("密码错误：{}", username);
+            // 记录登录失败日志
+            loginLogService.recordLoginLog(user.getId(), username, 0, "密码错误");
             throw new RuntimeException("用户名或密码错误");
         }
 
         // 检查用户状态
         if (user.getStatus() != null && user.getStatus() != 1) {
             log.warn("用户已被禁用：{}", username);
+            // 记录登录失败日志
+            loginLogService.recordLoginLog(user.getId(), username, 0, "用户已被禁用");
             throw new RuntimeException("用户已被禁用");
         }
 
@@ -92,6 +103,9 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         log.info("用户登录成功：{}", username);
+
+        // 记录登录日志
+        loginLogService.recordLoginLog(user.getId(), username, 1, "登录成功");
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
@@ -222,5 +236,110 @@ public class UserServiceImpl implements UserService {
             return phone;
         }
         return phone.substring(0, 3) + "****" + phone.substring(7);
+    }
+
+    /**
+     * 根据用户名查询用户信息（返回 Domain）
+     */
+    @Override
+    public SysUserDomain getUserInfoByUsername(String username) {
+        SysUser user = sysUserMapper.findUserInfoByUserName(username);
+        if (user == null) {
+            return null;
+        }
+        // 转换为 SysUserDomain
+        SysUserDomain domain = new SysUserDomain();
+        domain.setId(user.getId());
+        domain.setUsername(user.getUsername());
+        domain.setPassword(user.getPassword());
+        domain.setPhone(user.getPhone());
+        domain.setRealName(user.getRealName());
+        domain.setNickName(user.getNickName());
+        domain.setEmail(user.getEmail());
+        domain.setStatus(user.getStatus());
+        domain.setSex(user.getSex());
+        domain.setDeleted(user.getDeleted());
+        domain.setCreateId(user.getCreateId());
+        domain.setUpdateId(user.getUpdateId());
+        domain.setCreateWhere(user.getCreateWhere());
+        domain.setCreateTime(user.getCreateTime());
+        domain.setUpdateTime(user.getUpdateTime());
+        return domain;
+    }
+
+    /**
+     * 根据 ID 查询用户信息（返回 Domain）
+     */
+    @Override
+    public SysUserDomain getUserInfoById(Long userId) {
+        return null; // getUserInfoById 返回的是 UserInfoVO，需要另外处理
+    }
+
+    /**
+     * 条件查询用户列表
+     */
+    @Override
+    public List<SysUserDomain> listUsersByCondition(UserMConditionReqVO reqVO) {
+        Date startTime = reqVO.getStartTime();
+        Date endTime = reqVO.getEndTime();
+        return sysUserMapper.getUsersInfoByMCondition(
+                reqVO.getUserName(),
+                reqVO.getNickName(),
+                startTime,
+                endTime
+        );
+    }
+
+    /**
+     * 更新用户信息
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserInfo(Long userId, UserInfoRequest request) {
+        SysUser user = sysUserMapper.selectByPrimaryKey(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        user.setNickName(request.getNickName());
+        user.setPhone(request.getPhone());
+        user.setEmail(request.getEmail());
+        user.setSex(request.getSex());
+        user.setUpdateTime(new Date());
+
+        int result = sysUserMapper.updateUserInfo(user);
+        if (result <= 0) {
+            throw new RuntimeException("更新用户信息失败");
+        }
+
+        log.info("更新用户信息成功：{}", userId);
+    }
+
+    /**
+     * 修改密码
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        SysUser user = sysUserMapper.findByUserName(username);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        // 验证旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new RuntimeException("旧密码错误");
+        }
+
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdateTime(new Date());
+
+        int result = sysUserMapper.updateUserInfo(user);
+        if (result <= 0) {
+            throw new RuntimeException("修改密码失败");
+        }
+
+        log.info("修改密码成功：{}", username);
     }
 }

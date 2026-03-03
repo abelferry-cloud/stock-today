@@ -21,9 +21,14 @@ spring:
       password: ${REDIS_PASSWORD:}
       database: 0
       timeout: 5000ms
+  # 启用异步支持（登录日志异步记录）
+  task:
+    execution:
+      pool-size: 10
+      queue-capacity: 100
 
 mybatis:
-  type-aliases-package: com.me.stock.pojo.entity
+  type-aliases-package: com.me.stock.user.entity
   mapper-locations: classpath*:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
