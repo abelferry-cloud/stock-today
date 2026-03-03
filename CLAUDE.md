@@ -91,3 +91,9 @@ Configuration is profile-based with YAML files in module resources:
 - `application-stock.yml` - Stock-specific settings
 - `application-mq.yml` - RabbitMQ settings
 - `application-xxljob.yml` - XXL-Job settings
+
+## TODO List
+
+项目 TODO 清单位于 [`TODO/todo-list.md`](TODO/todo-list.md)，记录了后续可扩展的模块和功能。
+
+**重要**：每完成一个 TODO 项后，必须更新 `TODO/todo-list.md` 将对应任务标记为完成。

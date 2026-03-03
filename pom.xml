@@ -23,6 +23,7 @@
         <module>stock-common</module>
         <module>stock-analysis-ai</module>
         <module>stock-crawler</module>
+        <module>stock-user</module>
     </modules>
 
     <properties>
@@ -43,6 +44,7 @@
         <easyexcel.version>4.0.1</easyexcel.version>
         <mysql-connector.version>8.0.33</mysql-connector.version>
         <spring-boot.version>3.2.5</spring-boot.version>
+        <jjwt.version>0.12.6</jjwt.version>
     </properties>
 
     <dependencyManagement>
@@ -157,6 +159,32 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
                 <version>${spring-boot.version}</version>
+            </dependency>
+
+            <!-- JWT (io.jsonwebtoken 0.12.x) -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>${jjwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>${jjwt.version}</version>
+                <scope>runtime</scope>
+            </dependency>
+
+            <!-- Stock User Module -->
+            <dependency>
+                <groupId>com.stock</groupId>
+                <artifactId>stock-user</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
