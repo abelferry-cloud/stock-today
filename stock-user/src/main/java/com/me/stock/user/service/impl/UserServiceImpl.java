@@ -10,7 +10,6 @@ import com.me.stock.user.dto.request.RegisterRequest;
 import com.me.stock.user.dto.request.UserInfoRequest;
 import com.me.stock.user.dto.response.LoginResponse;
 import com.me.stock.user.security.JwtTokenProvider;
-import com.me.stock.user.service.LoginLogService;
 import com.me.stock.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +40,6 @@ public class UserServiceImpl implements UserService {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
     private final RedisTemplate<String, String> redisTemplate;
-    private final LoginLogService loginLogService;
 
     /**
      * Token 黑名单 Key 前缀
@@ -57,24 +55,18 @@ public class UserServiceImpl implements UserService {
         SysUser user = sysUserMapper.findByUserName(username);
         if (user == null) {
             log.warn("用户不存在：{}", username);
-            // 记录登录失败日志
-            loginLogService.recordLoginLog(null, username, 0, "用户不存在");
             throw new RuntimeException("用户名或密码错误");
         }
 
         // 校验密码
         if (!passwordEncoder.matches(password, user.getPassword())) {
             log.warn("密码错误：{}", username);
-            // 记录登录失败日志
-            loginLogService.recordLoginLog(user.getId(), username, 0, "密码错误");
             throw new RuntimeException("用户名或密码错误");
         }
 
         // 检查用户状态
         if (user.getStatus() != null && user.getStatus() != 1) {
             log.warn("用户已被禁用：{}", username);
-            // 记录登录失败日志
-            loginLogService.recordLoginLog(user.getId(), username, 0, "用户已被禁用");
             throw new RuntimeException("用户已被禁用");
         }
 
@@ -103,9 +95,6 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         log.info("用户登录成功：{}", username);
-
-        // 记录登录日志
-        loginLogService.recordLoginLog(user.getId(), username, 1, "登录成功");
 
         return LoginResponse.builder()
                 .accessToken(accessToken)

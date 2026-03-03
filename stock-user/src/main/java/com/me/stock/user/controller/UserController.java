@@ -3,11 +3,8 @@ package com.me.stock.user.controller;
 import com.me.stock.pojo.vo.UserMConditionReqVO;
 import com.me.stock.user.common.Result;
 import com.me.stock.user.dto.request.UserInfoRequest;
-import com.me.stock.user.dto.response.LoginLogVO;
 import com.me.stock.user.dto.response.UserVO;
-import com.me.stock.user.entity.SysLoginLog;
 import com.me.stock.pojo.domain.SysUserDomain;
-import com.me.stock.user.service.LoginLogService;
 import com.me.stock.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +32,6 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
-    private final LoginLogService loginLogService;
 
     /**
      * 获取当前登录用户信息
@@ -104,40 +100,6 @@ public class UserController {
 
         userService.updateUserInfo(currentUser.getId(), request);
         return Result.success(null);
-    }
-
-    /**
-     * 查询用户登录日志
-     */
-    @GetMapping("/login-logs")
-    @Operation(summary = "查询用户登录日志", description = "查询当前用户的登录历史记录")
-    public Result<List<LoginLogVO>> getUserLoginLogs(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
-            return Result.error("用户未登录");
-        }
-
-        SysUserDomain user = userService.getUserInfoByUsername(userDetails.getUsername());
-        if (user == null) {
-            return Result.error("用户不存在");
-        }
-
-        List<SysLoginLog> logs = loginLogService.getUserLoginLogs(user.getId());
-        List<LoginLogVO> result = logs.stream()
-                .map(log -> LoginLogVO.builder()
-                        .id(log.getId())
-                        .userId(log.getUserId())
-                        .username(log.getUsername())
-                        .status(log.getStatus())
-                        .ip(log.getIp())
-                        .location(log.getLocation())
-                        .browser(log.getBrowser())
-                        .os(log.getOs())
-                        .msg(log.getMsg())
-                        .loginTime(log.getLoginTime())
-                        .build())
-                .collect(Collectors.toList());
-
-        return Result.success(result);
     }
 
     /**

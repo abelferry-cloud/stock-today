@@ -56,7 +56,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 公开接口
                 .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/doc.html","/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 // PUT、DELETE 请求需要认证
                 .requestMatchers(HttpMethod.PUT, "/**").authenticated()

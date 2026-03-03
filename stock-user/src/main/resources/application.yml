@@ -6,8 +6,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/stock_analysis?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: YOUR_DB_USERNAME
-    password: YOUR_DB_PASSWORD
+    username: 123456
+    password: 123456
     hikari:
       minimum-idle: 5
       maximum-pool-size: 20
@@ -18,7 +18,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD:123456}
       database: 0
       timeout: 5000ms
   # 启用异步支持（登录日志异步记录）
