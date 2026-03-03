@@ -54,6 +54,9 @@ application-prod.yml
 # Project documentation (internal)
 project_introduce.md
 
+# TODO directory (development planning)
+TODO/
+
 # Private files and sensitive data
 *.env
 .env

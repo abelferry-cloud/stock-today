@@ -1,183 +1,448 @@
-# Stock Today - AI 驱动的股票分析平台
+<div align="center">
 
-基于 Spring AI 和 RAG（检索增强生成）技术的智能股票分析系统。
+# 📈 Stock Today - AI 智能股票分析平台
 
-## 项目概述
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.5-brightgreen.svg)
+![Java](https://img.shields.io/badge/Java-17-orange.svg)
+![Maven](https://img.shields.io/badge/Maven-3.8+-blue.svg)
+![MySQL](https://img.shields.io/badge/MySQL-8.0+-blue.svg)
+![Spring AI](https://img.shields.io/badge/Spring%20AI-1.0.0-purple.svg)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.12+-orange.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-Stock Today 是一个多模块 Maven 项目，提供 AI 驱动的股票数据分析服务。系统通过 XXL-Job 定时采集股票数据，使用 RabbitMQ 进行消息队列处理，并通过 RAG 管道将数据向量化存储到 Pinecone，最终提供基于 AI 的股票分析聊天功能。
+**基于 Spring AI + RAG 的智能化股票分析系统**
 
-## 模块说明
+[特性](#-项目特性) • [技术架构](#-技术架构) • [快速开始](#-快速开始) • [功能展示](#-功能展示) • [项目结构](#-项目结构)
 
-### stock-common
-共享库模块，包含：
-- 数据库实体类（Domain）
-- MyBatis Mapper 接口和 XML
-- DTO/VO 数据传输对象
-- 工具类（ID 生成、时间处理、数据解析等）
+</div>
 
-### stock-crawler
-数据采集服务，功能包括：
-- 使用 XXL-Job 进行分布式任务调度
-- 采集国内大盘指数（上证指数、深证成指）
-- 采集个股实时数据
-- 采集国际指数（道琼斯、纳斯达克、恒生等）
-- 通过 RabbitMQ 发布采集的数据
+---
 
-### stock-analysis-ai
-AI 分析服务（Spring Boot 3.2.5），功能包括：
-- RAG 管道数据处理
-- 向量存储（Pinecone）
-- AI 聊天接口（DeepSeek）
-- 文本 Embedding（阿里云百炼）
-- Knife4j API 文档
+## 📖 项目介绍
 
-## 技术栈
+**Stock Today** 是一个多模块的 AI 驱动股票分析平台，整合了**数据采集**、**智能处理**和**AI 问答**三大核心能力。
 
-| 技术 | 版本 | 说明 |
-|------|------|------|
-| Java | 17 | 基础语言 |
-| Spring Boot | 3.2.5 | 应用框架 |
-| Spring AI | 1.0.0 | AI 集成框架 |
-| XXL-Job | 2.4.0 | 分布式任务调度 |
-| RabbitMQ | - | 消息队列 |
-| MyBatis | - | 数据库 ORM |
-| Pinecone | - | 向量数据库 |
-| Knife4j | - | API 文档 |
-| 通义千问 | text-embedding-v3 | 文本 Embedding（1024 维） |
-| DeepSeek | deepseek-chat | AI 聊天模型 |
+系统通过定时爬虫采集全球股市数据（A 股、美股、港股等），利用 RAG（检索增强生成）技术进行向量化处理，最终通过 DeepSeek 大模型提供智能化的股票分析问答服务。
 
-## 快速开始
+### 核心价值
 
-### 前置要求
+- 🔄 **实时数据采集** - 定时爬取国内外主要股市指数和个股实时数据
+- 🧠 **AI 智能分析** - 基于 Spring AI + DeepSeek 的 RAG 问答系统
+- 📊 **向量化存储** - Pinecone 向量数据库支持高效语义检索
+- 🚀 **高可用架构** - RabbitMQ 消息队列解耦，支持水平扩展
 
-1. Java 17+
-2. Maven 3.6+
-3. MySQL 8.0+
-4. RabbitMQ 3.x
-5. XXL-Job Admin 2.4.0
-6. Pinecone 账号
-7. DeepSeek API Key
-8. 阿里云百炼账号（DashScope）
+---
 
-### 本地配置
+## 🏗️ 技术架构
 
-1. **克隆仓库后配置敏感信息：**
+### 技术栈总览
 
-```bash
-cd scripts
-cp secrets.env.template secrets.env
-# 编辑 secrets.env，填入真实的 API Key 和密码
+| 技术领域 | 技术选型 | 版本 | 作用说明 |
+|---------|---------|------|---------|
+| **后端框架** | Spring Boot | 3.2.5 | 核心应用框架 |
+| **开发语言** | Java | 17 | 主要编程语言 |
+| **AI 框架** | Spring AI | 1.0.0 | LLM 集成框架 |
+| **大模型** | DeepSeek | deepseek-chat | 智能对话模型 |
+| **嵌入模型** | Alibaba DashScope | text-embedding-v3 | 文本向量化 |
+| **向量数据库** | Pinecone | - | 向量存储与检索 |
+| **关系数据库** | MySQL | 8.0+ | 业务数据存储 |
+| **ORM 框架** | MyBatis | 3.5.16 | 数据访问层 |
+| **消息队列** | RabbitMQ | 3.12+ | 异步消息解耦 |
+| **任务调度** | XXL-Job | 2.4.0 | 分布式任务调度 |
+| **缓存** | Caffeine | - | 本地缓存 |
+| **限流** | Resilience4j | 2.2.0 | 请求限流保护 |
+| **API 文档** | Knife4j | 4.5.0 | OpenAPI 3 文档 |
+| **工具库** | Guava, Commons Lang3 | - | 通用工具类 |
+
+### 系统架构图
+
+<div align="center">
+
+![系统架构图](images/系统架构.png "Stock Today 系统架构图")
+
+*图 1: Stock Today 系统架构设计*
+
+</div>
+
+### 数据流转
+
+```
+XXL-Job 定时触发
+       │
+       ▼
+stock-crawler 爬取数据 ──▶ RabbitMQ ──▶ stock-analysis-ai 消费
+                                                    │
+                      ┌─────────────────────────────┼─────────────────────┐
+                      ▼                             ▼                     ▼
+                MySQL 存储                    Pinecone 向量化        DeepSeek AI 回答
 ```
 
-2. **Git 过滤器配置（首次使用）：**
+---
+
+## ✨ 功能展示
+
+### ✅ 已实现功能
+
+#### 📊 数据采集模块（stock-crawler）
+- [x] **国内行情采集** - 采集上证指数、深证成指等 A 股市场数据
+- [x] **个股实时数据** - 采集个股实时行情、涨跌幅、成交量等信息
+- [x] **海外市场采集** - 采集道琼斯、纳斯达克、恒生指数等全球主要股指
+- [x] **XXL-Job 调度** - 支持分布式定时任务调度
+- [x] **RabbitMQ 消息发布** - 数据发布到消息队列，解耦生产消费
+
+#### 🤖 AI 分析模块（stock-analysis-ai）
+- [x] **RAG 知识检索** - 基于 Pinecone 的向量检索增强生成
+- [x] **DeepSeek 智能问答** - 同步/流式 AI 对话接口
+- [x] **知识库管理** - 静态知识库文件向量化存储
+- [x] **股票数据查询** - K 线数据、实时行情查询接口
+- [x] **API Key 管理** - 多 Key 负载均衡 + 429 限流自动冷却
+- [x] **Resilience4j 限流** - 请求限流保护
+- [x] **Caffeine 缓存** - 本地缓存加速
+- [x] **Knife4j API 文档** - 在线接口文档
+
+#### 🔧 公共模块（stock-common）
+- [x] **实体类定义** - 股票、用户、权限等实体
+- [x] **Mapper 接口** - MyBatis 数据访问接口
+- [x] **DTO/VO 定义** - 数据传输对象和视图对象
+- [x] **工具类** - 日期处理、ID 生成、数据解析等
+
+### 🚧 待开发功能
+
+- [ ] **用户权限系统** - 基于角色的访问控制（RBAC）
+- [ ] **前端管理界面** - Vue3 + Element Plus 管理后台
+- [ ] **K 线图表展示** - ECharts 股票 K 线图可视化
+- [ ] **智能选股** - 基于 AI 的股票推荐和筛选
+- [ ] **情绪分析** - 新闻资讯的情感倾向分析
+- [ ] **预警推送** - 股价异动微信/邮件通知
+- [ ] **数据导出** - Excel 数据导出功能
+
+---
+
+## 🚀 快速开始
+
+### 环境要求
+
+| 软件 | 最低版本 | 推荐版本 |
+|------|---------|---------|
+| JDK | 17 | 17+ |
+| Maven | 3.8 | 3.9+ |
+| MySQL | 8.0 | 8.0+ |
+| RabbitMQ | 3.10 | 3.12+ |
+| XXL-Job | 2.3 | 2.4.0 |
+
+### 1. 克隆项目
 
 ```bash
-# 在项目根目录执行
-git config filter.stocksecrets.clean "./scripts/git-filter-clean.sh"
-git config filter.stocksecrets.smudge "./scripts/git-filter-smudge.sh"
-git config filter.stocksecrets.required true
+git clone https://github.com/your-username/stock-today.git
+cd stock-today
 ```
 
-### 启动服务
+### 2. 配置环境变量
 
-#### 1. 启动 stock-crawler（数据采集）
+在项目根目录创建 `.env` 文件，配置以下环境变量：
 
 ```bash
-cd stock-crawler
-mvn clean package
-java -jar target/stock-crawler-*.jar --spring.profiles.active=mq,xxljob,stock
+# MySQL 配置
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_DATABASE=stock_analysis
+MYSQL_USERNAME=root
+MYSQL_PASSWORD=your_password
+
+# RabbitMQ 配置
+RABBITMQ_HOST=127.0.0.1
+RABBITMQ_PORT=5672
+RABBITMQ_USERNAME=guest
+RABBITMQ_PASSWORD=guest
+
+# DeepSeek API Key
+DEEPSEEK_API_KEY=your_deepseek_api_key
+
+# 阿里云百炼 API Key（Embedding）
+ALIYUN_DASHSCOPE_API_KEY=your_dashscope_api_key
+
+# Pinecone 配置
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_INDEX_NAME=stock-analysis-index
 ```
 
-需要配置：
-- `application-mq.yml`: RabbitMQ 连接信息
-- `application-xxljob.yml`: XXL-Job 执行器配置
-- `application-stock.yml`: 股票数据源配置
+### 3. 数据库初始化
 
-#### 2. 启动 stock-analysis-ai（AI 分析）
+```sql
+-- 创建数据库
+CREATE DATABASE IF NOT EXISTS stock_analysis DEFAULT CHARACTER SET utf8mb4;
+USE stock_analysis;
 
-```bash
-cd stock-analysis-ai
-mvn clean package
-java -jar target/stock-analysis-ai-*.jar
+-- 执行 SQL 脚本（位置：scripts/init.sql）
+source scripts/init.sql
 ```
 
-服务运行在 8080 端口，API 文档地址：`http://localhost:8080/swagger-ui.html`
-
-### 构建项目
+### 4. 构建项目
 
 ```bash
 # 构建整个项目
-mvn clean install
+mvn clean install -DskipTests
 
-# 构建单个模块
+# 或分别构建各模块
+mvn clean package -pl stock-common -am
 mvn clean package -pl stock-crawler -am
+mvn clean package -pl stock-analysis-ai -am
 ```
 
-## API 接口
+### 5. 启动服务
 
-### stock-analysis-ai
+#### 方式一：使用脚本（推荐）
 
-| 接口 | 方法 | 说明 |
+```bash
+# 启动 stock-crawler（数据采集服务）
+sh scripts/load-env.sh stock-crawler
+
+# 启动 stock-analysis-ai（AI 分析服务）
+sh scripts/load-env.sh stock-analysis-ai
+```
+
+#### 方式二：手动启动
+
+```bash
+# 启动 stock-crawler（端口 8090）
+java -jar stock-crawler/target/stock-crawler-1.0.0.jar \
+  --spring.profiles.active=mq,xxljob,stock
+
+# 启动 stock-analysis-ai（端口 8080）
+java -jar stock-analysis-ai/target/stock-analysis-ai-1.0.0.jar
+```
+
+### 6. 验证服务
+
+```bash
+# 检查 AI 服务健康状态
+curl http://localhost:8080/actuator/health
+
+# 检查 API 文档
+curl http://localhost:8080/swagger-ui.html
+
+# 检查 MQ 状态
+curl http://localhost:8080/api/mq/status
+```
+
+### 7. 配置 XXL-Job
+
+访问 XXL-Job 管理后台，添加以下执行器任务：
+
+| 任务名称 | 执行器 | 调度类型 | Cron 表达式 |
+|---------|--------|---------|------------|
+| 采集国内行情 | stock-crawler | 自动 | `0 */5 * * * ?` |
+| 采集个股数据 | stock-crawler | 自动 | `0 */1 * * * ?` |
+| 采集海外行情 | stock-crawler | 自动 | `0 */10 * * * ?` |
+
+---
+
+## 📁 项目结构
+
+```
+stock-today/
+├── stock-common/                 # 公共模块
+│   └── src/main/java/
+│       └── com/me/stock/
+│           ├── config/           # 配置类
+│           │   └── RabbitMQProperties.java
+│           ├── entity/           # 实体类
+│           │   ├── StockMarketIndexInfo.java
+│           │   ├── StockRtInfo.java
+│           │   ├── StockOuterMarketIndexInfo.java
+│           │   ├── SysUser.java
+│           │   └── SysPermission.java
+│           ├── mapper/           # MyBatis Mapper
+│           │   ├── StockMarketIndexInfoMapper.java
+│           │   ├── StockRtInfoMapper.java
+│           │   └── SysUserMapper.java
+│           ├── pojo/             # 数据对象
+│           │   ├── domain/       # 业务领域对象
+│           │   ├── dto/          # 数据传输对象
+│           │   └── vo/           # 视图对象
+│           ├── utils/            # 工具类
+│           │   ├── DateTimeUtil.java
+│           │   └── IdWorker.java
+│           └── exception/        # 异常类
+│               └── BusinessException.java
+│
+├── stock-crawler/                # 数据采集模块（端口：8090）
+│   └── src/main/java/
+│       └── com/me/spring/
+│           ├── jobApplication.java        # 启动类
+│           ├── StockTimerTaskService.java # 定时任务服务
+│           ├── config/                    # 配置类
+│           │   ├── MqConfig.java          # RabbitMQ 配置
+│           │   ├── XxlJobConfig.java      # XXL-Job 配置
+│           │   ├── HttpClientConfig.java  # HttpClient 配置
+│           │   ├── ApiKeyConfig.java      # API Key 配置
+│           │   └── TaskExecutePool.java   # 线程池配置
+│           └── job/
+│               └── StockJob.java          # XXL-Job 任务处理器
+│
+├── stock-analysis-ai/            # AI 分析模块（端口：8080）
+│   └── src/main/java/
+│       └── com/me/spring/stockanalysisai/
+│           ├── StockAnalysisAiApplication.java  # 启动类
+│           ├── controller/          # REST 控制器
+│           │   ├── ChatController.java      # 聊天接口
+│           │   └── StockController.java     # 股票查询接口
+│           ├── service/             # 服务层
+│           │   ├── ChatService.java
+│           │   ├── StockDataService.java
+│           │   ├── VectorStoreService.java
+│           │   └── impl/
+│           ├── config/              # 配置类
+│           │   ├── AIConfig.java            # Spring AI 配置
+│           │   ├── RabbitMQConfig.java      # RabbitMQ 配置
+│           │   ├── CanalConfig.java         # Canal 配置
+│           │   ├── CorsConfig.java          # 跨域配置
+│           │   ├── Knife4jConfig.java       # Knife4j 配置
+│           │   ├── ApiKeyManager.java       # API Key 管理
+│           │   └── RateLimiterProperties.java
+│           ├── listener/            # 消息监听器
+│           │   ├── StockDataQueueListener.java
+│           │   └── CacheInvalidMessageListener.java
+│           ├── pojo/                # 数据对象
+│           │   ├── request/         # 请求对象
+│           │   └── response/        # 响应对象
+│           ├── common/              # 公共类
+│           │   ├── Result.java
+│           │   └── ResultCode.java
+│           ├── exception/           # 异常处理
+│           │   ├── BusinessException.java
+│           │   └── GlobalExceptionHandler.java
+│           └── tools/               # 工具类
+│               ├── DateTimeTools.java
+│               └── StockQueryTool.java
+│
+└── scripts/                      # 脚本文件
+    ├── init.sql                  # 数据库初始化脚本
+    └── load-env.sh               # 环境变量加载脚本
+```
+
+---
+
+## 📚 技术参考
+
+### Spring AI
+
+本项目使用 [Spring AI](https://docs.spring.io/spring-ai/reference/) 1.0.0 作为 AI 集成框架：
+
+```java
+// RAG 配置示例
+@Configuration
+public class AIConfig {
+
+    @Bean
+    public ChatClient chatClient(ChatClient.Builder builder) {
+        return builder.build();
+    }
+
+    @Bean
+    public VectorStore vectorStore(EmbeddingModel embeddingModel) {
+        return new PineconeVectorStore(embeddingModel, pineconeConfig);
+    }
+}
+```
+
+**核心组件：**
+- `ChatClient` - 与大模型对话的客户端
+- `EmbeddingModel` - 文本向量化模型（DashScope）
+- `VectorStore` - 向量存储接口（Pinecone 实现）
+- `RAG` - 检索增强生成管道
+
+### XXL-Job
+
+[XXL-Job](https://www.xuxueli.com/xxl-job/) 分布式任务调度平台：
+
+```java
+@XxlJob("getInnerMarketInfo")
+public void getInnerMarketInfo() throws Exception {
+    // 采集国内市场行情
+    stockTimerTaskService.getInnerMarketInfo();
+}
+```
+
+### RabbitMQ
+
+消息队列用于解耦数据生产和消费：
+
+```java
+// 生产者
+@Autowired
+private RabbitTemplate rabbitTemplate;
+
+rabbitTemplate.convertAndSend(exchange, routingKey, message);
+
+// 消费者
+@RabbitListener(queues = "${stock.rabbitmq.vector-queue}")
+public void handleStockData(StockDataMessage message) {
+    vectorStoreService.addStockData(message);
+}
+```
+
+---
+
+## 📝 API 接口
+
+### Chat 接口
+
+| 接口 | 方法 | 描述 |
 |------|------|------|
-| `/chat` | POST | 同步 AI 聊天 |
-| `/chat/stream` | POST | 流式 AI 聊天 |
-| `/api/mq/status` | GET | RabbitMQ 连接状态 |
+| `/chat` | POST | 同步聊天接口 |
+| `/chat/stream` | POST | 流式聊天接口（SSE） |
+
+### Stock 接口
+
+| 接口 | 方法 | 描述 |
+|------|------|------|
+| `/api/stock/query` | POST | 股票数据查询 |
+| `/api/stock/kline` | GET | K 线数据查询 |
+| `/api/mq/status` | GET | MQ 连接状态 |
 | `/api/mq/queues/info` | GET | 队列信息 |
 
-### XXL-Job 任务（stock-crawler）
+**API 文档地址：** http://localhost:8080/swagger-ui.html
 
-| 任务名 | 说明 |
-|--------|------|
-| `getInnerMarketInfo` | 采集国内大盘指数 |
-| `getStockRTIndex` | 采集个股实时数据 |
-| `getOuterMarketInfo` | 采集国际指数 |
+---
 
-## 数据流程
+## 🔧 配置说明
+
+### 核心配置文件
+
+| 模块 | 配置文件 | 说明 |
+|------|---------|------|
+| stock-analysis-ai | `application.yml` | 主配置（AI、RabbitMQ） |
+| stock-analysis-ai | `application-db.yml` | 数据库配置 |
+| stock-analysis-ai | `application-cache.yml` | 缓存配置 |
+| stock-analysis-ai | `application-canal.yml` | Canal 配置 |
+| stock-crawler | `application.yml` | 主配置 |
+| stock-crawler | `application-mq.yml` | RabbitMQ 配置 |
+| stock-crawler | `application-xxljob.yml` | XXL-Job 配置 |
+| stock-crawler | `application-stock.yml` | 股票配置 |
+
+---
+
+## 📄 License
+
+本项目采用 [MIT](https://opensource.org/licenses/MIT) 协议开源。
 
 ```
-┌─────────────────┐     ┌──────────────┐     ┌──────────────────┐
-│  stock-crawler  │────▶│   RabbitMQ   │────▶│  stock-analysis-ai│
-│  (数据采集)     │     │  (消息队列)   │     │   (AI 分析)        │
-└─────────────────┘     └──────────────┘     └──────────────────┘
-                                │
-                                ▼
-                         ┌──────────────┐
-                         │    Pinecone  │
-                         │  (向量存储)   │
-                         └──────────────┘
+Copyright (c) 2024 Stock Today
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software...
 ```
 
-1. **数据采集**: stock-crawler 通过 XXL-Job 定时任务采集股票数据
-2. **消息发布**: 数据发布到 RabbitMQ 队列
-3. **数据消费**: stock-analysis-ai 消费队列消息
-4. **RAG 处理**: 数据向量化后存储到 Pinecone
-5. **AI 聊天**: 用户通过聊天接口获取股票分析结果
+---
 
-## 配置文件说明
+<div align="center">
 
-| 文件 | 模块 | 说明 |
-|------|------|------|
-| `application.yml` | stock-analysis-ai | 主配置（AI、服务端口） |
-| `application-db.yml` | stock-analysis-ai | 数据库配置 |
-| `application-cache.yml` | stock-analysis-ai | 缓存配置 |
-| `application-canal.yml` | stock-analysis-ai | Canal 配置 |
-| `application-mq.yml` | stock-crawler | RabbitMQ 配置 |
-| `application-stock.yml` | stock-crawler | 股票数据源配置 |
-| `application-xxljob.yml` | stock-crawler | XXL-Job 配置 |
+**🌟 如果这个项目对你有帮助，请给一个 Star！**
 
-## 安全说明
+[⬆ 返回顶部](#-stock-today---ai-智能股票分析平台)
 
-⚠️ **重要**: 本项目使用 Git 过滤器保护敏感信息。
-
-- `scripts/secrets.env` 存储真实 API Key 和密码，**已加入 .gitignore，永不提交**
-- `scripts/secrets.env.template` 是模板文件，可安全提交
-- 提交到仓库的配置文件中的敏感信息会被自动替换为占位符（如 `YOUR_DEEPSEEK_API_KEY`）
-- checkout 时会自动从 `secrets.env` 还原真实值
-
-## 许可证
-
-本项目仅供学习和内部使用。
-
-## 联系方式
-
-如有问题，请提交 Issue 或联系开发团队。
+</div>
