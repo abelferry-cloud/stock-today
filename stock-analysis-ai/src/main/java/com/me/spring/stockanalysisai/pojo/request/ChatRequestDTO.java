@@ -34,6 +34,6 @@ public class ChatRequestDTO {
     /**
      * 是否启用流式输出
      */
-    @Schema(description = "是否启用流式输出", example = "false")
-    private Boolean stream = false;
+    @Schema(description = "是否启用流式输出", example = "true")
+    private Boolean stream = true;
 }
