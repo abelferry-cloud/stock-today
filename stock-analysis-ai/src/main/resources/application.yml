@@ -23,12 +23,12 @@ spring:
     deepseek:
       # 多个 API Key 配置（数组格式）- 支持负载均衡和 429 自动冷却
       api-keys:
-        - YOUR_DEEPSEEK_API_KEY_1
-        - YOUR_DEEPSEEK_API_KEY_2
-        - YOUR_DEEPSEEK_API_KEY_3
+        - ${DEEPSEEK_API_KEY_1}
+        - ${DEEPSEEK_API_KEY_2}
+        - ${DEEPSEEK_API_KEY_3}
       # 单个 API Key（供 Spring AI 自动配置使用，取 api-keys 的第一个）
       # Spring AI 3.x 版本的 DeepSeek starter 需要此配置来创建 Bean
-      api-key: YOUR_DEEPSEEK_API_KEY_1
+      api-key: ${DEEPSEEK_API_KEY_4}
       base-url: https://api.deepseek.com
       chat:
         options:
@@ -37,7 +37,7 @@ spring:
 
     openai: # 阿里云百炼平台兼容OpenAI，所以这里使用阿里云百炼平台地址
       base-url: https://dashscope.aliyuncs.com/compatible-mode
-      api-key: YOUR_ALIYUN_DASHSCOPE_API_KEY
+      api-key: ${ALIYUN_DASHSCOPE_API_KEY}
       embedding:
         options:
           model: text-embedding-v3
@@ -46,7 +46,7 @@ spring:
     # Pinecone向量存储配置
     vectorstore:
       pinecone:
-        api-key: YOUR_PINECONE_API_KEY
+        api-key: ${PINECONE_API_KEY}
         index-name: stock-analysis-index
 
 
