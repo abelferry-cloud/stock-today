@@ -86,10 +86,10 @@
 
     <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.me.stock.pojo.entity.SysUser" useGeneratedKeys="true">
         insert into sys_user
-        ( id,username,password,phone,real_name,nick_name,
+        ( username,password,phone,real_name,nick_name,
         email,status,sex,deleted,create_id,
         update_id,create_where,create_time,update_time)
-        values (#{id},#{username},#{password},#{phone},#{realName},#{nickName},
+        values (#{username},#{password},#{phone},#{realName},#{nickName},
         #{email},#{status},#{sex},#{deleted},#{createId},
         #{updateId},#{createWhere},#{createTime},#{updateTime})
     </insert>
