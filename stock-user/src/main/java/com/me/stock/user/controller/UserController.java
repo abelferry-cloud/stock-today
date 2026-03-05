@@ -1,120 +1,60 @@
 package com.me.stock.user.controller;
 
-import com.me.stock.pojo.vo.UserMConditionReqVO;
 import com.me.stock.user.common.Result;
-import com.me.stock.user.dto.request.UserInfoRequest;
 import com.me.stock.user.dto.response.UserVO;
-import com.me.stock.pojo.domain.SysUserDomain;
 import com.me.stock.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
- * 用户管理控制器
+ * 用户控制器
  *
- * @author Jovan
- * @since 1.0.0
+ * @author stock-user
  */
 @Slf4j
+@Tag(name = "用户管理", description = "用户信息查询、更新等接口")
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
-@Tag(name = "UserController", description = "用户管理接口")
+@SecurityRequirement(name = "BearerAuth")
 public class UserController {
 
     private final UserService userService;
 
-    /**
-     * 获取当前登录用户信息
-     */
-    @GetMapping("/current")
-    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息")
-    public Result<UserVO> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
-            return Result.error("用户未登录");
-        }
-
-        SysUserDomain user = userService.getUserInfoByUsername(userDetails.getUsername());
-        if (user == null) {
-            return Result.error("用户不存在");
-        }
-
-        UserVO userVO = UserVO.fromEntity(user);
+    @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的信息")
+    @GetMapping("/me")
+    public Result<UserVO> getCurrentUser() {
+        // 用户名从 Security 上下文获取
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        UserVO userVO = userService.getUserInfo(username);
         return Result.success(userVO);
     }
 
-    /**
-     * 根据 ID 查询用户信息
-     */
+    @Operation(summary = "更新当前用户信息", description = "更新当前登录用户的部分信息(昵称,真实姓名,手机号,邮箱)")
+    @PutMapping("/me")
+    public Result<UserVO> updateCurrentUser(
+            @jakarta.validation.Valid @RequestBody com.me.stock.user.dto.request.UpdateProfileRequest request) {
+        // 用户名从 Security 上下文获取
+        String username = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName();
+        UserVO userVO = userService.updateUserProfile(username, request);
+        return Result.success("更新个人信息成功", userVO);
+    }
+
+    @Operation(summary = "获取用户详情", description = "根据 ID 获取用户详情")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
-    @Operation(summary = "根据 ID 查询用户", description = "根据用户 ID 查询用户详细信息")
-    @PreAuthorize("hasAnyAuthority('sys:user:query', 'admin')")
-    public Result<UserVO> getUserById(@PathVariable Long id) {
-        SysUserDomain user = userService.getUserInfoById(id);
-        if (user == null) {
+    public Result<UserVO> getUserById(
+            @Parameter(description = "用户 ID") @PathVariable Long id) {
+        UserVO userVO = userService.getUserInfo(userService.getUserById(id).getUsername());
+        if (userVO == null) {
             return Result.error("用户不存在");
         }
-
-        UserVO userVO = UserVO.fromEntity(user);
         return Result.success(userVO);
-    }
-
-    /**
-     * 条件查询用户列表
-     */
-    @GetMapping("/list")
-    @Operation(summary = "条件查询用户列表", description = "根据用户名、昵称、时间范围等条件查询用户列表")
-    @PreAuthorize("hasAnyAuthority('sys:user:query', 'admin')")
-    public Result<List<UserVO>> listUsers(UserMConditionReqVO reqVO) {
-        List<SysUserDomain> users = userService.listUsersByCondition(reqVO);
-        List<UserVO> result = users.stream()
-                .map(UserVO::fromEntity)
-                .collect(Collectors.toList());
-        return Result.success(result);
-    }
-
-    /**
-     * 更新用户信息
-     */
-    @PutMapping
-    @Operation(summary = "更新用户信息", description = "更新当前登录用户的基本信息")
-    public Result<Void> updateUserInfo(@RequestBody UserInfoRequest request,
-                                       @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
-            return Result.error("用户未登录");
-        }
-
-        SysUserDomain currentUser = userService.getUserInfoByUsername(userDetails.getUsername());
-        if (currentUser == null) {
-            return Result.error("用户不存在");
-        }
-
-        userService.updateUserInfo(currentUser.getId(), request);
-        return Result.success(null);
-    }
-
-    /**
-     * 修改密码
-     */
-    @PutMapping("/password")
-    @Operation(summary = "修改密码", description = "修改当前登录用户的密码")
-    public Result<Void> changePassword(@RequestParam String oldPassword,
-                                       @RequestParam String newPassword,
-                                       @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) {
-            return Result.error("用户未登录");
-        }
-
-        userService.changePassword(userDetails.getUsername(), oldPassword, newPassword);
-        return Result.success(null);
     }
 }

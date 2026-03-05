@@ -6,13 +6,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * 用户中心模块启动类
- * 提供用户认证、授权、权限管理等功能
+ * 提供 JWT 认证、用户管理、权限控制等功能
  *
- * @author Jovan
- * @since 1.0.0
+ * @author stock-user
  */
 @SpringBootApplication
-@MapperScan({"com.me.stock.mapper", "com.me.stock.user.mapper"})
+@MapperScan("com.me.stock.mapper")
 public class StockUserApplication {
 
     public static void main(String[] args) {

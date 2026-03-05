@@ -1,110 +1,87 @@
 package com.me.stock.user.service;
 
-import com.me.stock.pojo.domain.SysUserDomain;
 import com.me.stock.pojo.entity.SysUser;
-import com.me.stock.pojo.vo.UserMConditionReqVO;
+import com.me.stock.user.dto.request.LoginRequest;
 import com.me.stock.user.dto.request.RegisterRequest;
-import com.me.stock.user.dto.request.UserInfoRequest;
 import com.me.stock.user.dto.response.LoginResponse;
-
-import java.util.List;
-import java.util.Map;
+import com.me.stock.user.dto.response.UserVO;
 
 /**
  * 用户服务接口
  *
- * @author Jovan
- * @since 1.0.0
+ * @author stock-user
  */
 public interface UserService {
 
     /**
      * 用户登录
      *
-     * @param username 用户名
-     * @param password 密码
-     * @param rememberMe 是否记住我
+     * @param request 登录请求
      * @return 登录响应
      */
-    LoginResponse login(String username, String password, Boolean rememberMe);
+    LoginResponse login(LoginRequest request);
 
     /**
      * 用户注册
      *
      * @param request 注册请求
-     * @return 是否成功
+     * @return 用户信息
      */
-    boolean register(RegisterRequest request);
-
-    /**
-     * 用户登出
-     *
-     * @param token 当前 Token
-     */
-    void logout(String token);
+    UserVO register(RegisterRequest request);
 
     /**
      * 刷新 Token
      *
      * @param refreshToken 刷新 Token
-     * @return 新的 Token 对
+     * @return 新的 Token 信息
      */
-    Map<String, String> refreshToken(String refreshToken);
+    LoginResponse refreshToken(String refreshToken);
 
     /**
-     * 根据用户名查询用户信息
+     * 获取当前用户信息
      *
      * @param username 用户名
      * @return 用户信息
+     */
+    UserVO getUserInfo(String username);
+
+    /**
+     * 根据用户名查询用户
+     *
+     * @param username 用户名
+     * @return 用户实体
      */
     SysUser getUserByUsername(String username);
 
     /**
-     * 根据 ID 查询用户信息
+     * 根据 ID 查询用户
      *
-     * @param userId 用户 ID
-     * @return 用户信息
+     * @param id 用户 ID
+     * @return 用户实体
      */
-    SysUser getUserById(Long userId);
+    SysUser getUserById(Long id);
 
     /**
-     * 根据用户名查询用户信息（返回 Domain）
+     * 更新当前登录用户信息
      *
      * @param username 用户名
-     * @return 用户信息
+     * @param request 更新请求参数
+     * @return 更新后的用户信息
      */
-    SysUserDomain getUserInfoByUsername(String username);
-
-    /**
-     * 根据 ID 查询用户信息（返回 Domain）
-     *
-     * @param userId 用户 ID
-     * @return 用户信息
-     */
-    SysUserDomain getUserInfoById(Long userId);
-
-    /**
-     * 条件查询用户列表
-     *
-     * @param reqVO 查询条件
-     * @return 用户列表
-     */
-    List<SysUserDomain> listUsersByCondition(UserMConditionReqVO reqVO);
+    UserVO updateUserProfile(String username, com.me.stock.user.dto.request.UpdateProfileRequest request);
 
     /**
      * 更新用户信息
      *
-     * @param userId 用户 ID
-     * @param request 更新请求
+     * @param user 用户信息
+     * @return 是否成功
      */
-    void updateUserInfo(Long userId, UserInfoRequest request);
+    boolean updateUser(SysUser user);
 
     /**
-     * 修改密码
+     * 更新最后登录时间
      *
-     * @param username 用户名
-     * @param oldPassword 旧密码
-     * @param newPassword 新密码
+     * @param userId 用户 ID
      */
-    void changePassword(String username, String oldPassword, String newPassword);
+    void updateLastLoginTime(Long userId);
 }

@@ -1,34 +1,33 @@
 package com.me.stock.user.service.impl;
 
+import com.me.stock.mapper.SysRoleMapper;
 import com.me.stock.mapper.SysUserMapper;
-import com.me.stock.pojo.domain.SysUserDomain;
+import com.me.stock.pojo.entity.SysRole;
 import com.me.stock.pojo.entity.SysUser;
-import com.me.stock.pojo.vo.UserMConditionReqVO;
 import com.me.stock.user.common.ResultCode;
-import com.me.stock.user.config.JwtProperties;
+import com.me.stock.user.dto.request.LoginRequest;
 import com.me.stock.user.dto.request.RegisterRequest;
-import com.me.stock.user.dto.request.UserInfoRequest;
 import com.me.stock.user.dto.response.LoginResponse;
+import com.me.stock.user.dto.response.UserVO;
 import com.me.stock.user.security.JwtTokenProvider;
 import com.me.stock.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Date;
 
 /**
  * 用户服务实现类
  *
- * @author Jovan
- * @since 1.0.0
+ * @author stock-user
  */
 @Slf4j
 @Service
@@ -36,299 +35,232 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl implements UserService {
 
     private final SysUserMapper sysUserMapper;
+    private final SysRoleMapper sysRoleMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final JwtProperties jwtProperties;
-    private final RedisTemplate<String, String> redisTemplate;
+    private final AuthenticationManager authenticationManager;
 
-    /**
-     * Token 黑名单 Key 前缀
-     */
-    private static final String BLACKLIST_PREFIX = "auth:blacklist:";
-
-    /**
-     * 用户登录
-     */
     @Override
-    public LoginResponse login(String username, String password, Boolean rememberMe) {
-        // 查询用户信息
-        SysUser user = sysUserMapper.findByUserName(username);
-        if (user == null) {
-            log.warn("用户不存在：{}", username);
-            throw new RuntimeException("用户名或密码错误");
-        }
+    public LoginResponse login(LoginRequest request) {
+        log.info("用户登录：username={}", request.getUsername());
 
-        // 校验密码
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            log.warn("密码错误：{}", username);
-            throw new RuntimeException("用户名或密码错误");
-        }
+        try {
+            // Spring Security 认证
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()
+                    )
+            );
 
-        // 检查用户状态
-        if (user.getStatus() != null && user.getStatus() != 1) {
-            log.warn("用户已被禁用：{}", username);
+            // 生成 Token
+            String accessToken = jwtTokenProvider.generateToken(authentication);
+            String refreshToken = jwtTokenProvider.generateRefreshToken(request.getUsername());
+
+            // 获取用户信息
+            SysUser user = sysUserMapper.findUserInfoByUserName(request.getUsername());
+
+            // 更新最后登录时间 (使用数据库字段 update_time 记录)
+            if (user != null) {
+                SysUser updateEntity = new SysUser();
+                updateEntity.setId(user.getId());
+                updateEntity.setUpdateTime(new Date());
+                sysUserMapper.updateByPrimaryKeySelective(updateEntity);
+            }
+
+            // 构建响应
+            return LoginResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .tokenType("Bearer")
+                    .expiresIn(86400000L)
+                    .user(convertToVO(user))
+                    .build();
+
+        } catch (DisabledException e) {
+            log.warn("用户已被禁用：username={}", request.getUsername());
             throw new RuntimeException("用户已被禁用");
+        } catch (BadCredentialsException e) {
+            log.warn("用户名或密码错误：username={}", request.getUsername());
+            throw new RuntimeException("用户名或密码错误");
+        } catch (Exception e) {
+            log.error("登录失败：username={}, error={}", request.getUsername(), e.getMessage());
+            throw new RuntimeException("登录失败：" + e.getMessage());
         }
-
-        // 生成 Token
-        UserDetails userDetails = User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .authorities(new ArrayList<>())
-                .build();
-
-        String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
-        String refreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
-
-        // 如果选择记住我，延长 Token 有效期
-        if (Boolean.TRUE.equals(rememberMe)) {
-            // TODO: 实现记住我功能，可以延长 Token 有效期
-        }
-
-        // 构建用户信息
-        LoginResponse.UserInfoDTO userInfo = LoginResponse.UserInfoDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .nickName(user.getNickName())
-                .phone(maskPhone(user.getPhone()))
-                .email(user.getEmail())
-                .build();
-
-        log.info("用户登录成功：{}", username);
-
-        return LoginResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .tokenType("Bearer")
-                .expiresIn(jwtProperties.getExpiration())
-                .userInfo(userInfo)
-                .build();
     }
 
-    /**
-     * 用户注册
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean register(RegisterRequest request) {
-        // 校验密码一致性
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new RuntimeException("两次输入的密码不一致");
-        }
+    public UserVO register(RegisterRequest request) {
+        log.info("用户注册：username={}, phone={}, email={}",
+                request.getUsername(), request.getPhone(), request.getEmail());
 
         // 检查用户名是否存在
-        SysUser existUser = sysUserMapper.findByUserName(request.getUsername());
-        if (existUser != null) {
-            throw new RuntimeException("用户名已存在");
+        SysUser existingUser = sysUserMapper.findByUserName(request.getUsername());
+        if (existingUser != null) {
+            throw new RuntimeException(ResultCode.USER_ALREADY_EXISTS.getMessage());
         }
 
-        // 构建用户实体
+        // 创建用户（不设置 id，由数据库自增生成）
         SysUser user = new SysUser();
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setNickName(request.getNickname() != null ? request.getNickname() : request.getUsername());
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
-        user.setNickName(request.getNickName() != null ? request.getNickName() : request.getUsername());
-        user.setStatus(1);
-        user.setDeleted(1);
+        user.setStatus(1); // 正常状态
+        user.setDeleted(1); // 未删除
+        user.setSex(1); // 默认男
+        user.setCreateWhere(1); // web 注册
         user.setCreateTime(new Date());
         user.setUpdateTime(new Date());
 
-        // 插入数据库
-        int result = sysUserMapper.addUser(user);
-        if (result <= 0) {
-            throw new RuntimeException("注册失败");
-        }
+        // 使用 insertSelective 插入用户，不传入 id 字段，让数据库自增
+        // MyBatis 的 useGeneratedKeys=true 会自动将生成的主键回填到 user.id
+        sysUserMapper.insertSelective(user);
+        log.info("用户注册成功：id={}, username={}", user.getId(), user.getUsername());
 
-        log.info("用户注册成功：{}", request.getUsername());
-        return true;
+        // 插入后重新从数据库查询完整的用户信息（确保数据一致性）
+        SysUser savedUser = sysUserMapper.selectByPrimaryKey(user.getId());
+        return convertToVO(savedUser != null ? savedUser : user);
     }
 
-    /**
-     * 用户登出
-     */
     @Override
-    public void logout(String token) {
-        if (StringUtils.hasText(token)) {
-            // 将 Token 加入黑名单
-            long remainingTime = jwtTokenProvider.getRemainingExpiration(token);
-            if (remainingTime > 0) {
-                String key = BLACKLIST_PREFIX + token;
-                redisTemplate.opsForValue().set(key, "logout", remainingTime, TimeUnit.MILLISECONDS);
-                log.debug("Token 已加入黑名单");
-            }
+    public LoginResponse refreshToken(String refreshToken) {
+        log.info("刷新 Token");
+
+        // 验证 Refresh Token
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new RuntimeException(ResultCode.TOKEN_INVALID.getMessage());
         }
-        log.info("用户登出成功");
+
+        // 检查是否过期
+        if (jwtTokenProvider.isTokenExpired(refreshToken)) {
+            throw new RuntimeException(ResultCode.TOKEN_EXPIRED.getMessage());
+        }
+
+        // 获取用户名
+        String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
+
+        // 查询用户
+        SysUser user = sysUserMapper.findByUserName(username);
+        if (user == null || user.getStatus() != 1) {
+            throw new RuntimeException(ResultCode.USER_NOT_FOUND.getMessage());
+        }
+
+        // 生成新的 Token
+        String authorities = getUserAuthorities(user.getId());
+        String newAccessToken = jwtTokenProvider.generateToken(username, authorities);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(username);
+
+        return LoginResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .tokenType("Bearer")
+                .expiresIn(86400000L)
+                .user(convertToVO(user))
+                .build();
     }
 
-    /**
-     * 刷新 Token
-     */
     @Override
-    public Map<String, String> refreshToken(String refreshToken) {
-        try {
-            // 验证 Refresh Token 有效性
-            String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
-            SysUser user = sysUserMapper.findByUserName(username);
-
-            if (user == null) {
-                throw new RuntimeException("用户不存在");
-            }
-
-            UserDetails userDetails = User.builder()
-                    .username(user.getUsername())
-                    .password(user.getPassword())
-                    .authorities(new ArrayList<>())
-                    .build();
-
-            if (!jwtTokenProvider.validateToken(refreshToken, userDetails)) {
-                throw new RuntimeException("Refresh Token 无效");
-            }
-
-            // 生成新的 Token
-            String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
-            String newRefreshToken = jwtTokenProvider.generateRefreshToken(userDetails);
-
-            Map<String, String> tokens = new HashMap<>();
-            tokens.put("accessToken", newAccessToken);
-            tokens.put("refreshToken", newRefreshToken);
-
-            log.info("Token 刷新成功：{}", username);
-            return tokens;
-        } catch (Exception e) {
-            log.error("Token 刷新失败：{}", e.getMessage());
-            throw new RuntimeException("Token 刷新失败");
+    public UserVO getUserInfo(String username) {
+        SysUser user = sysUserMapper.findByUserName(username);
+        if (user == null) {
+            throw new RuntimeException(ResultCode.USER_NOT_FOUND.getMessage());
         }
+        return convertToVO(user);
     }
 
-    /**
-     * 根据用户名查询用户信息
-     */
     @Override
     public SysUser getUserByUsername(String username) {
         return sysUserMapper.findByUserName(username);
     }
 
-    /**
-     * 根据 ID 查询用户信息
-     */
     @Override
-    public SysUser getUserById(Long userId) {
-        return sysUserMapper.selectByPrimaryKey(userId);
+    public SysUser getUserById(Long id) {
+        return sysUserMapper.selectByPrimaryKey(id);
     }
 
-    /**
-     * 脱敏手机号
-     */
-    private String maskPhone(String phone) {
-        if (!StringUtils.hasText(phone) || phone.length() != 11) {
-            return phone;
-        }
-        return phone.substring(0, 3) + "****" + phone.substring(7);
-    }
-
-    /**
-     * 根据用户名查询用户信息（返回 Domain）
-     */
-    @Override
-    public SysUserDomain getUserInfoByUsername(String username) {
-        SysUser user = sysUserMapper.findUserInfoByUserName(username);
-        if (user == null) {
-            return null;
-        }
-        // 转换为 SysUserDomain
-        SysUserDomain domain = new SysUserDomain();
-        domain.setId(user.getId());
-        domain.setUsername(user.getUsername());
-        domain.setPassword(user.getPassword());
-        domain.setPhone(user.getPhone());
-        domain.setRealName(user.getRealName());
-        domain.setNickName(user.getNickName());
-        domain.setEmail(user.getEmail());
-        domain.setStatus(user.getStatus());
-        domain.setSex(user.getSex());
-        domain.setDeleted(user.getDeleted());
-        domain.setCreateId(user.getCreateId());
-        domain.setUpdateId(user.getUpdateId());
-        domain.setCreateWhere(user.getCreateWhere());
-        domain.setCreateTime(user.getCreateTime());
-        domain.setUpdateTime(user.getUpdateTime());
-        return domain;
-    }
-
-    /**
-     * 根据 ID 查询用户信息（返回 Domain）
-     */
-    @Override
-    public SysUserDomain getUserInfoById(Long userId) {
-        return null; // getUserInfoById 返回的是 UserInfoVO，需要另外处理
-    }
-
-    /**
-     * 条件查询用户列表
-     */
-    @Override
-    public List<SysUserDomain> listUsersByCondition(UserMConditionReqVO reqVO) {
-        Date startTime = reqVO.getStartTime();
-        Date endTime = reqVO.getEndTime();
-        return sysUserMapper.getUsersInfoByMCondition(
-                reqVO.getUserName(),
-                reqVO.getNickName(),
-                startTime,
-                endTime
-        );
-    }
-
-    /**
-     * 更新用户信息
-     */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateUserInfo(Long userId, UserInfoRequest request) {
-        SysUser user = sysUserMapper.selectByPrimaryKey(userId);
-        if (user == null) {
-            throw new RuntimeException("用户不存在");
-        }
-
-        user.setNickName(request.getNickName());
-        user.setPhone(request.getPhone());
-        user.setEmail(request.getEmail());
-        user.setSex(request.getSex());
-        user.setUpdateTime(new Date());
-
-        int result = sysUserMapper.updateUserInfo(user);
-        if (result <= 0) {
-            throw new RuntimeException("更新用户信息失败");
-        }
-
-        log.info("更新用户信息成功：{}", userId);
-    }
-
-    /**
-     * 修改密码
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void changePassword(String username, String oldPassword, String newPassword) {
+    public UserVO updateUserProfile(String username, com.me.stock.user.dto.request.UpdateProfileRequest request) {
         SysUser user = sysUserMapper.findByUserName(username);
         if (user == null) {
-            throw new RuntimeException("用户不存在");
+            throw new RuntimeException(ResultCode.USER_NOT_FOUND.getMessage());
         }
 
-        // 验证旧密码
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new RuntimeException("旧密码错误");
+        // 修改允许的字段
+        if (request.getNickname() != null) {
+            user.setNickName(request.getNickname());
         }
-
-        // 更新密码
-        user.setPassword(passwordEncoder.encode(newPassword));
+        if (request.getRealName() != null) {
+            user.setRealName(request.getRealName());
+        }
+        if (request.getPhone() != null) {
+            user.setPhone(request.getPhone());
+        }
+        if (request.getEmail() != null) {
+            user.setEmail(request.getEmail());
+        }
         user.setUpdateTime(new Date());
 
-        int result = sysUserMapper.updateUserInfo(user);
-        if (result <= 0) {
-            throw new RuntimeException("修改密码失败");
+        // 更新数据库
+        sysUserMapper.updateByPrimaryKeySelective(user);
+        log.info("用户更新信息成功: username={}", username);
+
+        // 返回最新的完整的 UserVO
+        return convertToVO(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateUser(SysUser user) {
+        return sysUserMapper.updateByPrimaryKeySelective(user) > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateLastLoginTime(Long userId) {
+        // 由于数据库没有 last_login_time 字段，这里不实现
+        log.warn("updateLastLoginTime 不被支持，数据库无此字段");
+    }
+
+    /**
+     * 获取用户的权限字符串
+     */
+    private String getUserAuthorities(Long userId) {
+        // 获取用户的角色
+        java.util.List<SysRole> roles = sysRoleMapper.getRoleByUserId(userId);
+        if (roles.isEmpty()) {
+            return "ROLE_USER";
+        }
+        // 返回第一个角色的名称
+        return "ROLE_" + roles.get(0).getName();
+    }
+
+    /**
+     * 转换为用户 VO
+     */
+    private UserVO convertToVO(SysUser user) {
+        // 获取用户角色（仅当 id 不为 null 时才查询）
+        String roleName = "USER";
+        if (user.getId() != null) {
+            java.util.List<SysRole> roles = sysRoleMapper.getRoleByUserId(user.getId());
+            if (!roles.isEmpty()) {
+                roleName = roles.get(0).getName();
+            }
         }
 
-        log.info("修改密码成功：{}", username);
+        return UserVO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .nickname(user.getNickName())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .realName(user.getRealName())
+                .roleName(roleName)
+                .status(user.getStatus())
+                .createTime(user.getCreateTime())
+                .build();
     }
 }

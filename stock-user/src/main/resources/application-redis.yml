@@ -1,15 +1,17 @@
-# Redis 配置文件
+# Redis 配置
 spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-      database: 0
+      database: ${REDIS_DATABASE:0}
       timeout: 5000ms
       lettuce:
         pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
+          max-active: ${REDIS_MAX_ACTIVE:8}
+          max-idle: ${REDIS_MAX_IDLE:8}
+          min-idle: ${REDIS_MIN_IDLE:2}
           max-wait: -1ms
+      # 连接超时时间
+      connect-timeout: 5000ms

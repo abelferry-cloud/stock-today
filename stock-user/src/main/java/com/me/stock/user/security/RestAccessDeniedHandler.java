@@ -1,6 +1,9 @@
 package com.me.stock.user.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.me.stock.user.common.Result;
+import com.me.stock.user.common.ResultCode;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,15 +14,12 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 访问拒绝处理器
- * 当用户已认证但没有足够权限时触发
+ * 权限不足时返回 403
  *
- * @author Jovan
- * @since 1.0.0
+ * @author stock-user
  */
 @Slf4j
 @Component
@@ -31,19 +31,14 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
-                       AccessDeniedException accessDeniedException) throws IOException {
-        log.error("访问被拒绝：{}", accessDeniedException.getMessage());
+                       AccessDeniedException accessDeniedException) throws IOException, ServletException {
+        log.error("访问拒绝：{}", accessDeniedException.getMessage());
 
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("code", HttpServletResponse.SC_FORBIDDEN);
-        body.put("message", "没有访问权限");
-        body.put("data", null);
-        body.put("timestamp", System.currentTimeMillis());
-
-        objectMapper.writeValue(response.getOutputStream(), body);
+        Result<Void> result = Result.error(ResultCode.FORBIDDEN);
+        objectMapper.writeValue(response.getWriter(), result);
     }
 }

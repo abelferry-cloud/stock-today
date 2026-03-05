@@ -14,37 +14,38 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 /**
  * Redis 配置类
  *
- * @author Jovan
- * @since 1.0.0
+ * @author stock-user
  */
 @Configuration
 public class RedisConfig {
 
-    /**
-     * 配置 RedisTemplate
-     */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
+        template.setConnectionFactory(factory);
 
-        // 配置 ObjectMapper 用于 JSON 序列化
+        // 配置 ObjectMapper
         ObjectMapper mapper = new ObjectMapper();
         mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         mapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
 
-        // 使用 Jackson2JsonRedisSerializer 序列化值
-        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(mapper, Object.class);
+        // JSON 序列化器
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer =
+                new Jackson2JsonRedisSerializer<>(mapper, Object.class);
+
+        // String 序列化器
+        StringRedisSerializer stringRedisSerializer = new StringRedisSerializer();
 
         // Key 使用 String 序列化
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setKeySerializer(stringRedisSerializer);
+        template.setHashKeySerializer(stringRedisSerializer);
 
         // Value 使用 JSON 序列化
-        template.setValueSerializer(serializer);
-        template.setHashValueSerializer(serializer);
+        template.setValueSerializer(jackson2JsonRedisSerializer);
+        template.setHashValueSerializer(jackson2JsonRedisSerializer);
 
         template.afterPropertiesSet();
+
         return template;
     }
 }
